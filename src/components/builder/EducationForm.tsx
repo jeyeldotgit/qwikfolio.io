@@ -1,0 +1,224 @@
+import type { Education } from "@/schemas/portfolio";
+import { useState } from "react";
+import { FormCard } from "@/components/form/FormCard";
+import { FormSection } from "@/components/form/FormSection";
+import { FormActions } from "@/components/form/FormActions";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+
+type EducationFormProps = {
+  value: Education[];
+  onChange: (value: Education[]) => void;
+  onSubmitSection?: () => void;
+  className?: string;
+};
+
+export const EducationForm = ({
+  value,
+  onChange,
+  onSubmitSection,
+  className,
+}: EducationFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEducationChange = (index: number, updated: Education) => {
+    onChange(value.map((edu, idx) => (idx === index ? updated : edu)));
+  };
+
+  const handleRemoveEducation = (index: number) => {
+    onChange(value.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddEducation = () => {
+    onChange([
+      ...value,
+      {
+        id: undefined,
+        school: "",
+        degree: "",
+        field: "",
+        startDate: "",
+        endDate: "",
+        current: false,
+        description: "",
+      },
+    ]);
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    onSubmitSection?.();
+    setTimeout(() => setIsSubmitting(false), 150);
+  };
+
+  return (
+    <FormCard
+      title="Education"
+      description="Add the education that supports your story."
+      className={className}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {value.map((edu, index) => (
+          <FormSection key={edu.id ?? index} title={`Education ${index + 1}`}>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-school-${index}`} required>
+                    School
+                  </Label>
+                  <Input
+                    id={`edu-school-${index}`}
+                    placeholder="e.g., State University"
+                    value={edu.school}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        school: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-degree-${index}`} required>
+                    Degree
+                  </Label>
+                  <Input
+                    id={`edu-degree-${index}`}
+                    placeholder="e.g., BSc Computer Science"
+                    value={edu.degree}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        degree: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`edu-field-${index}`} required>
+                  Field of Study
+                </Label>
+                <Input
+                  id={`edu-field-${index}`}
+                  placeholder="e.g., Software Engineering"
+                  value={edu.field}
+                  onChange={(event) =>
+                    handleEducationChange(index, {
+                      ...edu,
+                      field: event.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-start-${index}`} required>
+                    Start Date
+                  </Label>
+                  <Input
+                    id={`edu-start-${index}`}
+                    placeholder="2016-09"
+                    value={edu.startDate}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        startDate: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-end-${index}`}>End Date</Label>
+                  <Input
+                    id={`edu-end-${index}`}
+                    placeholder="2020-06"
+                    value={edu.endDate ?? ""}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        endDate: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-current-${index}`}>
+                    Currently studying
+                  </Label>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <input
+                      id={`edu-current-${index}`}
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border border-slate-300 dark:border-slate-700"
+                      checked={edu.current}
+                      onChange={(event) =>
+                        handleEducationChange(index, {
+                          ...edu,
+                          current: event.target.checked,
+                          endDate: event.target.checked ? "" : edu.endDate,
+                        })
+                      }
+                    />
+                    <span>I&apos;m currently studying here</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`edu-description-${index}`}>
+                  Description (optional)
+                </Label>
+                <Textarea
+                  id={`edu-description-${index}`}
+                  rows={3}
+                  placeholder="Any achievements, focus areas, or relevant details."
+                  value={edu.description ?? ""}
+                  onChange={(event) =>
+                    handleEducationChange(index, {
+                      ...edu,
+                      description: event.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="text-xs text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50/60 dark:hover:bg-red-950/40"
+                  onClick={() => handleRemoveEducation(index)}
+                >
+                  Remove education
+                </Button>
+              </div>
+            </div>
+          </FormSection>
+        ))}
+
+        <div className="flex justify-start">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleAddEducation}
+          >
+            Add another school
+          </Button>
+        </div>
+
+        <FormActions
+          isSubmitting={isSubmitting}
+          primaryLabel="Save education"
+        />
+      </form>
+    </FormCard>
+  );
+};

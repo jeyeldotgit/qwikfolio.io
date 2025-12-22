@@ -1,0 +1,53 @@
+{
+  "personalInfo": {
+    "name": "Alex Developer",
+    "headline": "Full-Stack Developer focused on shipping fast, clean products",
+    "email": "alex@example.com",
+    "phone": "+1 (555) 123-4567",
+    "bio": "I build pragmatic, fast-to-ship web experiences with TypeScript, React, and modern tooling.",
+    "website": "https://alex.dev",
+    "github": "https://github.com/alex-dev",
+    "linkedin": "https://linkedin.com/in/alex-dev"
+  },
+  "skills": [
+    "TypeScript",
+    "React",
+    "Node.js",
+    "Tailwind CSS",
+    "Zod",
+    "PostgreSQL"
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "QwikBoards",
+      "description": "A minimal project dashboard tool that helps teams see what matters in under 30 seconds.",
+      "techStack": ["TypeScript", "React", "Vite", "Tailwind CSS"],
+      "repoUrl": "https://github.com/alex-dev/qwikboards",
+      "liveUrl": "https://qwikboards.app"
+    }
+  ],
+  "experience": [
+    {
+      "id": "exp-1",
+      "company": "ShipFast Labs",
+      "role": "Senior Frontend Engineer",
+      "startDate": "2023-01",
+      "endDate": "",
+      "current": true,
+      "description": "Led the frontend architecture for a portfolio of internal tools focused on developer productivity."
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "school": "State University",
+      "degree": "BSc Computer Science",
+      "field": "Software Engineering",
+      "startDate": "2016-09",
+      "endDate": "2020-06",
+      "current": false,
+      "description": "Focused on web technologies, distributed systems, and human-computer interaction."
+    }
+  ]
+}

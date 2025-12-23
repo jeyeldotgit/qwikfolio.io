@@ -1,5 +1,5 @@
 import { useAuthForm } from "@/hooks/useAuthForm";
-import type { AuthFormValues } from "@/schemas/auth";
+import type { SignInFormValues, SignUpFormValues } from "@/schemas/auth";
 import { Button } from "@/components/ui/button";
 import {
   signInWithEmail,
@@ -24,12 +24,15 @@ export const AuthForm = ({
   onAuthSuccess,
 }: AuthFormProps) => {
   const { values, errors, isSubmitting, handleChange, handleSubmit } =
-    useAuthForm();
+    useAuthForm(mode);
 
-  const onValid = (formValues: AuthFormValues) => {
+  const onValid = (formValues: SignInFormValues | SignUpFormValues) => {
     const action = mode === "signUp" ? signUpWithEmail : signInWithEmail;
 
-    action(formValues).then((result) => {
+    action({
+      email: formValues.email,
+      password: formValues.password,
+    }).then((result) => {
       if (!result) {
         console.log("Authentication failed");
         return;
@@ -89,7 +92,9 @@ export const AuthForm = ({
           <input
             id="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={
+              mode === "signUp" ? "new-password" : "current-password"
+            }
             className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             placeholder="••••••••"
             value={values.password}
@@ -102,15 +107,44 @@ export const AuthForm = ({
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between text-xs">
-          <button
-            type="button"
-            className="text-indigo-600 dark:text-indigo-400 hover:underline"
-            onClick={() => console.log("Forgot password clicked")}
-          >
-            Forgot password?
-          </button>
-        </div>
+        {mode === "signUp" ? (
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
+              Confirm password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              placeholder="••••••••"
+              value={"confirmPassword" in values ? values.confirmPassword : ""}
+              onChange={(event) =>
+                handleChange("confirmPassword", event.target.value)
+              }
+            />
+            {errors.confirmPassword ? (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {errors.confirmPassword}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {mode === "signIn" ? (
+          <div className="flex items-center justify-between text-xs">
+            <button
+              type="button"
+              className="text-indigo-600 dark:text-indigo-400 hover:underline"
+              onClick={() => console.log("Forgot password clicked")}
+            >
+              Forgot password?
+            </button>
+          </div>
+        ) : null}
 
         <Button
           type="submit"

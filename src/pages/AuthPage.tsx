@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AuthForm } from "@/components/AuthForm";
 import { Github, Mail, Zap } from "lucide-react";
@@ -6,6 +7,7 @@ import { getProfile } from "@/services/profile/profileService";
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
 
   const handleGoogleSignIn = () => {
     console.log("Google sign-in clicked");
@@ -50,13 +52,15 @@ const AuthPage = () => {
               Build once. Ship your career.
             </p>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">
-              Sign in to start your{" "}
+              {mode === "signIn" ? "Sign in" : "Create an account"} to start
+              your{" "}
               <span className="text-indigo-600 dark:text-indigo-400">
                 QwikFolio
               </span>
             </h1>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
-              Use Google, GitHub, or email to access your dashboard. We’ll
+              Use Google, GitHub, or email to{" "}
+              {mode === "signIn" ? "access" : "create"} your dashboard. We'll
               generate a clean portfolio and resume from structured data—no
               design skills, no setup friction.
             </p>
@@ -106,10 +110,18 @@ const AuthPage = () => {
               </div>
 
               <AuthForm
-                title="Sign in to QwikFolio"
-                subtitle="Use your email and password to access your workspace."
-                submitLabel="Continue with email"
-                mode="signIn"
+                title={
+                  mode === "signIn"
+                    ? "Sign in to QwikFolio"
+                    : "Create your account"
+                }
+                subtitle={
+                  mode === "signIn"
+                    ? "Use your email and password to access your workspace."
+                    : "Enter your details to get started with QwikFolio."
+                }
+                submitLabel={mode === "signIn" ? "Sign in" : "Create account"}
+                mode={mode}
                 onAuthSuccess={async (user) => {
                   if (!user?.id) {
                     navigate("/dashboard/profile-completion");
@@ -125,6 +137,23 @@ const AuthPage = () => {
                   }
                 }}
               />
+
+              <div className="mt-4 text-center">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  {mode === "signIn"
+                    ? "Don't have an account? "
+                    : "Already have an account? "}
+                  <button
+                    type="button"
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    onClick={() =>
+                      setMode(mode === "signIn" ? "signUp" : "signIn")
+                    }
+                  >
+                    {mode === "signIn" ? "Sign up" : "Sign in"}
+                  </button>
+                </p>
+              </div>
             </div>
 
             <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 px-4">

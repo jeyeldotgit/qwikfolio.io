@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuthForm } from "@/hooks/useAuthForm";
 import type { SignInFormValues, SignUpFormValues } from "@/schemas/auth";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,14 @@ import {
   signUpWithEmail,
 } from "@/services/auth/supabase-auth";
 import { useToast } from "@/hooks/useToast";
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Mail, CheckCircle2 } from "lucide-react";
 
 type AuthMode = "signIn" | "signUp";
 
@@ -15,6 +24,7 @@ type AuthFormProps = {
   submitLabel?: string;
   mode?: AuthMode;
   onAuthSuccess?: (user: { id: string } | null) => void;
+  onSwitchToSignIn?: () => void;
 };
 
 export const AuthForm = ({
@@ -23,10 +33,13 @@ export const AuthForm = ({
   submitLabel = "Continue",
   mode = "signIn",
   onAuthSuccess,
+  onSwitchToSignIn,
 }: AuthFormProps) => {
   const { values, errors, isSubmitting, handleChange, handleSubmit } =
     useAuthForm(mode);
   const { toast } = useToast();
+  const [isEmailConfirmationModalOpen, setIsEmailConfirmationModalOpen] =
+    useState(false);
 
   const onValid = (formValues: SignInFormValues | SignUpFormValues) => {
     const action = mode === "signUp" ? signUpWithEmail : signInWithEmail;
@@ -48,17 +61,20 @@ export const AuthForm = ({
         return;
       }
 
-      toast({
-        variant: "success",
-        title: mode === "signUp" ? "Account created!" : "Welcome back!",
-        description:
-          mode === "signUp"
-            ? "Your account has been created successfully."
-            : "You've been signed in successfully.",
-      });
+      if (mode === "signUp") {
+        // Show email confirmation modal for signup
+        setIsEmailConfirmationModalOpen(true);
+      } else {
+        // Show toast for signin success
+        toast({
+          variant: "success",
+          title: "Welcome back!",
+          description: "You've been signed in successfully.",
+        });
 
-      if (onAuthSuccess) {
-        onAuthSuccess(result?.user ?? null);
+        if (onAuthSuccess) {
+          onAuthSuccess(result?.user ?? null);
+        }
       }
     });
   };
@@ -171,6 +187,78 @@ export const AuthForm = ({
           {isSubmitting ? "Submitting..." : submitLabel}
         </Button>
       </form>
+
+      {/* Email Confirmation Modal */}
+      <Dialog
+        open={isEmailConfirmationModalOpen}
+        onOpenChange={setIsEmailConfirmationModalOpen}
+      >
+        <DialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+              <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <DialogTitle className="text-lg">Check your email</DialogTitle>
+          </div>
+          <DialogDescription className="text-sm leading-relaxed">
+            We've sent a confirmation email to{" "}
+            <span className="font-medium text-slate-900 dark:text-white">
+              {values.email}
+            </span>
+            . Please check your inbox and click the confirmation link to verify
+            your account.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 space-y-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+              <span className="font-medium">Step 1:</span> Check your email
+              inbox (and spam folder if needed)
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+              <span className="font-medium">Step 2:</span> Click the
+              confirmation link in the email
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+              <span className="font-medium">Step 3:</span> Return here and sign
+              in with your credentials
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsEmailConfirmationModalOpen(false);
+            }}
+          >
+            Got it
+          </Button>
+          {onSwitchToSignIn && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setIsEmailConfirmationModalOpen(false);
+                onSwitchToSignIn();
+              }}
+            >
+              Sign in now
+            </Button>
+          )}
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };

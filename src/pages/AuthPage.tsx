@@ -1,17 +1,34 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AuthForm } from "@/components/AuthForm";
-import { Github, Mail, Zap } from "lucide-react";
+import { Github, Mail, Zap, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "@/services/profile/profileService";
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
+  const [isSocialAuthModalOpen, setIsSocialAuthModalOpen] = useState(false);
+  const [socialAuthProvider, setSocialAuthProvider] = useState<
+    "Google" | "GitHub" | null
+  >(null);
 
-  const handleGoogleSignIn = () => {};
+  const handleGoogleSignIn = () => {
+    setSocialAuthProvider("Google");
+    setIsSocialAuthModalOpen(true);
+  };
 
-  const handleGithubSignIn = () => {};
+  const handleGithubSignIn = () => {
+    setSocialAuthProvider("GitHub");
+    setIsSocialAuthModalOpen(true);
+  };
 
   const handleGoHome = () => {
     navigate("/");
@@ -132,6 +149,7 @@ const AuthPage = () => {
                     navigate("/onboarding");
                   }
                 }}
+                onSwitchToSignIn={() => setMode("signIn")}
               />
 
               <div className="mt-4 text-center">
@@ -174,6 +192,76 @@ const AuthPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Social Auth Not Available Modal */}
+      <Dialog
+        open={isSocialAuthModalOpen}
+        onOpenChange={setIsSocialAuthModalOpen}
+      >
+        <DialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <DialogTitle className="text-lg">
+              {socialAuthProvider} sign-in coming soon
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-sm leading-relaxed">
+            {socialAuthProvider} authentication is not yet available. We're
+            working on adding this feature to make signing in even easier.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4 space-y-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
+          <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+            In the meantime, you can:
+          </p>
+          <div className="space-y-1.5">
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-amber-800 dark:text-amber-300">
+                •
+              </span>
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                Sign in or sign up using your email and password
+              </p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-xs text-amber-800 dark:text-amber-300">
+                •
+              </span>
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                Check back soon for {socialAuthProvider} authentication support
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSocialAuthModalOpen(false)}
+          >
+            Got it
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              setIsSocialAuthModalOpen(false);
+              // Focus on email form or switch to email sign-in
+              const emailInput = document.getElementById("email");
+              if (emailInput) {
+                emailInput.focus();
+              }
+            }}
+          >
+            Use email instead
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };

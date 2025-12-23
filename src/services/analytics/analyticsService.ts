@@ -1,7 +1,5 @@
 import supabase from "@/lib/supabase";
 
-type AnalyticsEventType = "view" | "download";
-
 class AnalyticsServiceError extends Error {
   code?: string;
   constructor(message: string, code?: string) {
@@ -129,8 +127,9 @@ export const getPortfolioStats = async (
       throw error;
     }
     throw new AnalyticsServiceError(
-      `Unexpected error fetching stats: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Unexpected error fetching stats: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
     );
   }
 };
-

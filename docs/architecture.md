@@ -36,27 +36,114 @@ Define data shape and validation rules.
 
 Encapsulate all behavior and state:
 
-- `useAuthForm`
-- `useDashboard`
-- `usePortfolioBuilder`
-- `usePortfolioPreview`
+**Authentication:**
+- `useAuthSession` - Manages Supabase session state
+- `useAuthForm` - Form state and validation for auth
+
+**Dashboard:**
+- `useDashboard` - Portfolio stats and status
+
+**Portfolio:**
+- `usePortfolioBuilder` - Portfolio editing and saving
+- `usePortfolioPreview` - Portfolio preview data
+
+**Profile:**
+- `useProfile` - User profile data
+
+**UI:**
+- `useToast` - Toast notification system
 
 ### Pages (`src/pages`)
 
-Route-level composition only.
+Route-level composition only:
+- `LandingPage` - Homepage
+- `AuthPage` - Authentication page
+- `dashboard/index.tsx` - Dashboard
+- `dashboard/builder.tsx` - Portfolio builder
+- `dashboard/preview.tsx` - Portfolio preview
+- `dashboard/profile-completion.tsx` - Profile setup
+- `PublicPortfolioPage` - Public portfolio view
 
 ### Components (`src/components`)
 
-Reusable UI and domain components.
+**UI Components** (`src/components/ui/`):
+- Button, Card, Dialog, Toast, Toaster, etc. (shadcn/ui style)
+
+**Domain Components**:
+- `builder/*` - Portfolio builder form sections
+- `dashboard/*` - Dashboard-specific components
+- `preview/*` - Portfolio preview components
+- `route/*` - Routing components (ProtectedRoute)
+
+### Services (`src/services`)
+
+Pure business logic, no React dependencies:
+
+**Portfolio:**
+- `portfolio/portfolioService.ts` - Portfolio CRUD operations
+
+**Profile:**
+- `profile/profileService.ts` - Profile management
+
+**Authentication:**
+- `auth/supabase-auth.ts` - Auth operations
+
+**Analytics:**
+- `analytics/analyticsService.ts` - Stats tracking
+
+**Storage:**
+- `storage/avatarStorageService.ts` - File uploads
 
 ---
 
 ## Folder Structure
 
 src/
-├─ schemas/
-├─ hooks/
-├─ components/
-├─ pages/
-├─ services/
-└─ lib/
+├─ schemas/          # Zod schemas and type definitions
+├─ hooks/            # React hooks for state and behavior
+├─ components/       # React components
+│  ├─ ui/           # Reusable UI components
+│  ├─ builder/      # Portfolio builder components
+│  ├─ dashboard/    # Dashboard components
+│  ├─ preview/      # Preview components
+│  └─ route/        # Routing components
+├─ pages/            # Route-level page components
+├─ services/         # Business logic services
+│  ├─ portfolio/    # Portfolio operations
+│  ├─ profile/       # Profile operations
+│  ├─ auth/         # Authentication
+│  ├─ analytics/    # Analytics tracking
+│  └─ storage/      # File storage
+└─ lib/              # Third-party integrations (Supabase, etc.)
+
+---
+
+## State Management Pattern
+
+### State Machine Pattern
+
+Hooks use a consistent state machine:
+- `idle` - Initial state
+- `loading` - Operation in progress
+- `success` - Operation completed successfully
+- `error` - Operation failed
+
+### Hook Return Pattern
+
+Hooks return objects, never tuples:
+
+```typescript
+// ✅ Good
+const { data, isLoading, error } = useHook();
+
+// ❌ Bad
+const [data, isLoading] = useHook();
+```
+
+### Service Layer Pattern
+
+- Services are pure functions
+- No React dependencies
+- Typed inputs and outputs
+- Throw typed errors for error handling
+- Hooks call services, services don't know about React

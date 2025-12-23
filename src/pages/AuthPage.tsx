@@ -9,13 +9,9 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
 
-  const handleGoogleSignIn = () => {
-    console.log("Google sign-in clicked");
-  };
+  const handleGoogleSignIn = () => {};
 
-  const handleGithubSignIn = () => {
-    console.log("GitHub sign-in clicked");
-  };
+  const handleGithubSignIn = () => {};
 
   const handleGoHome = () => {
     navigate("/");

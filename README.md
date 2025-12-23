@@ -5,28 +5,44 @@ It allows developers, students, and professionals to generate a career-ready por
 
 ## Key Features
 
-- Schema-driven portfolio builder
-- Clean dashboard with clear next actions
-- Resume-style printable preview
-- Mocked analytics (views, downloads, status)
+- **Schema-driven portfolio builder** - Build your portfolio with structured forms
+- **Real-time analytics** - Track views and resume downloads
+- **Public portfolio pages** - Share your portfolio via `/{username}` URL
+- **Resume PDF export** - Download your portfolio as a PDF
+- **Publish/Unpublish** - Control portfolio visibility
+- **Toast notifications** - User-friendly success and error messages
+- **Protected routes** - Secure authentication flow
+- **Profile management** - Complete profile with username, avatar, and bio
 
 ## Tech Stack
 
-- React + TypeScript (Vite)
-- Tailwind CSS + shadcn-style UI
-- Zod (schema-driven validation)
+- **Frontend**: React + TypeScript (Vite)
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Validation**: Zod (schema-driven validation)
+- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **Routing**: React Router DOM
+- **State Management**: React Hooks with state machine pattern
 
 ## Project Status
 
-Frontend MVP complete.  
-Backend, authentication, and persistence are intentionally out of scope for the current version.
+**MVP Complete** ✅
+
+- ✅ Full authentication (email/password with Supabase)
+- ✅ Portfolio CRUD operations with database persistence
+- ✅ Public portfolio pages with dynamic routing
+- ✅ Resume PDF download functionality
+- ✅ Real-time analytics tracking
+- ✅ Profile management with avatar upload
+- ✅ Toast notification system
 
 ## Documentation
 
 Detailed documentation is available in the `/docs` directory:
 
-- Architecture
-- Implementation details
-- Schemas
-- Design decisions
-- Roadmap
+- **Architecture** - System design and folder structure
+- **Implementation Details** - Feature-by-feature implementation guide
+- **API Documentation** - Service layer APIs and usage
+- **Schemas** - Data models and validation rules
+- **Database Schema** - SQL schema and migrations
+- **Roadmap** - Completed features and future plans
+- **Git Rules** - Contribution guidelines and workflow

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type ProfileMenuProps = {
   displayName?: string | null;
@@ -26,6 +28,8 @@ export const ProfileMenu = ({
 }: ProfileMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const initials = getInitials(displayName);
+  const { profile } = useProfile();
+  const avatarUrl = profile?.avatar_url ?? initials;
 
   const handleToggle = () => {
     setIsOpen((prev) => !prev);
@@ -51,7 +55,10 @@ export const ProfileMenu = ({
         onClick={handleToggle}
         aria-label="Open profile menu"
       >
-        {initials}
+        <Avatar>
+          <AvatarImage src={avatarUrl} />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
       </Button>
 
       {isOpen ? (

@@ -8,7 +8,10 @@ type EmailAuthPayload = {
 
 export const signUpWithEmail = async (
   formData: EmailAuthPayload
-): Promise<{ user: User | null; session: Session | null } | null> => {
+): Promise<
+  | { user: User | null; session: Session | null }
+  | { error: string; user: null; session: null }
+> => {
   const { data, error } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
@@ -19,7 +22,7 @@ export const signUpWithEmail = async (
 
   if (error) {
     console.error(error);
-    return null;
+    return { error: error.message, user: null, session: null };
   }
 
   return {
@@ -30,7 +33,10 @@ export const signUpWithEmail = async (
 
 export const signInWithEmail = async (
   formData: EmailAuthPayload
-): Promise<{ user: User | null; session: Session | null } | null> => {
+): Promise<
+  | { user: User | null; session: Session | null }
+  | { error: string; user: null; session: null }
+> => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: formData.email,
     password: formData.password,
@@ -38,7 +44,7 @@ export const signInWithEmail = async (
 
   if (error) {
     console.error(error);
-    return null;
+    return { error: error.message, user: null, session: null };
   }
 
   return {

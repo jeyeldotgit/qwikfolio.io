@@ -38,10 +38,21 @@ export const AuthSessionProvider = ({ children }: AuthSessionProviderProps) => {
   useEffect(() => {
     let isMounted = true;
     let hasInitialized = false;
+    let currentSession: Session | null = null;
 
     // Use onAuthStateChange which fires immediately with INITIAL_SESSION
     const unsubscribe = subscribeToAuthChanges(async (session) => {
       if (!isMounted) return;
+
+      // Prevent unnecessary state updates if session hasn't actually changed
+      if (
+        session?.access_token === currentSession?.access_token &&
+        hasInitialized
+      ) {
+        return;
+      }
+
+      currentSession = session;
 
       if (session) {
         setState({
@@ -83,6 +94,8 @@ export const AuthSessionProvider = ({ children }: AuthSessionProviderProps) => {
       const session = await getCurrentSession();
 
       if (!isMounted) return;
+
+      currentSession = session;
 
       if (session) {
         setState({

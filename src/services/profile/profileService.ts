@@ -59,3 +59,20 @@ export const updateProfile = async (
 
   return data as Profile | null;
 };
+
+export const getProfileByUsername = async (
+  username: string
+): Promise<Profile | null> => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", username)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile by username:", error);
+    return null;
+  }
+
+  return data as Profile | null;
+};

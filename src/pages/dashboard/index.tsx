@@ -17,61 +17,133 @@ import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
+import { useToast } from "@/hooks/useToast";
+import { updatePortfolioPublishedStatus } from "@/services/portfolio/portfolioService";
+import { getPortfolio } from "@/services/portfolio/portfolioService";
+import { trackResumeDownload } from "@/services/analytics/analyticsService";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuthSession();
   const { profile } = useProfile();
-  const { isLoading, portfolioExists, stats } = useDashboard();
+  const { isLoading, portfolioExists, stats, refetch } = useDashboard();
+  const { toast } = useToast();
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [statusOverride, setStatusOverride] = useState<
     "draft" | "published" | null
   >(null);
-  // TODO: replace with authenticated user handle / portfolio slug
-  const devName = "alex-dev";
 
   const handleCreatePortfolio = () => {
     navigate("/dashboard/builder");
   };
 
   const handleViewPortfolio = () => {
-    navigate("/dashboard/preview");
+    const effectiveStatus = statusOverride ?? stats?.status;
+    if (effectiveStatus === "published" && profile?.username) {
+      // Open public portfolio in new tab
+      const publicUrl = `${window.location.origin}/${profile.username}`;
+      window.open(publicUrl, "_blank");
+    } else {
+      // Show preview in dashboard
+      navigate("/dashboard/preview");
+    }
   };
 
   const handleEditPortfolio = () => {
-    console.log("Edit portfolio clicked");
     navigate("/dashboard/builder");
   };
 
   const handleEditProfile = () => {
-    console.log("Edit profile clicked");
+    navigate("/onboarding");
   };
 
   const handleLogout = async () => {
     await signOut();
+    toast({
+      variant: "success",
+      title: "Signed out",
+      description: "You've been signed out successfully.",
+    });
     navigate("/auth");
   };
 
-  const handleDownloadResume = () => {
-    console.log("Download resume clicked");
+  const handleDownloadResume = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not authenticated",
+        description: "Please sign in to download your resume.",
+      });
+      return;
+    }
+
+    try {
+      // Fetch portfolio data to verify it exists
+      const portfolio = await getPortfolio(user.id);
+
+      if (!portfolio) {
+        toast({
+          variant: "destructive",
+          title: "No portfolio found",
+          description: "Please create a portfolio first.",
+        });
+        return;
+      }
+
+      // Track download (will also be tracked in preview page, but that's okay - we can dedupe later)
+      await trackResumeDownload(user.id);
+
+      // Refetch stats to update the count
+      await refetch();
+
+      // Navigate to preview page with print flag
+      navigate("/dashboard/preview?print=true");
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to download resume",
+        description:
+          err instanceof Error ? err.message : "Unable to generate resume.",
+      });
+    }
   };
 
   const handleTogglePublishClick = () => {
     setIsPublishDialogOpen(true);
   };
 
-  const handleConfirmTogglePublish = () => {
-    if (!stats) return;
+  const handleConfirmTogglePublish = async () => {
+    if (!stats || !user) return;
     const currentStatus = statusOverride ?? stats.status;
     const nextStatus: "draft" | "published" =
       currentStatus === "published" ? "draft" : "published";
 
-    console.log(
-      `Portfolio ${nextStatus === "published" ? "published" : "unpublished"}`
-    );
-
-    setStatusOverride(nextStatus);
-    setIsPublishDialogOpen(false);
+    try {
+      await updatePortfolioPublishedStatus(user.id, nextStatus === "published");
+      setStatusOverride(null); // Clear override to use fresh data
+      await refetch(); // Refetch to get updated status
+      setIsPublishDialogOpen(false);
+      toast({
+        variant: "success",
+        title:
+          nextStatus === "published"
+            ? "Portfolio published!"
+            : "Portfolio unpublished",
+        description:
+          nextStatus === "published"
+            ? "Your portfolio is now live and accessible to everyone."
+            : "Your portfolio is now private.",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update status",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Unable to update portfolio status.",
+      });
+    }
   };
 
   if (isLoading) {
@@ -181,10 +253,29 @@ const DashboardPage = () => {
               : "Publishing will make your portfolio accessible via a public link. You can unpublish at any time."}
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
-          <p className="mb-1 font-medium">Public URL</p>
-          <p className="font-mono text-xs">/qwikfolio.io/{devName}</p>
-        </div>
+        {effectiveStatus === "published" && profile?.username ? (
+          <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
+            <p className="mb-1 font-medium">Public URL</p>
+            <p className="font-mono text-xs break-all">
+              {window.location.origin}/{profile.username}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const url = `${window.location.origin}/${profile.username}`;
+                navigator.clipboard.writeText(url);
+                toast({
+                  variant: "success",
+                  title: "URL copied!",
+                  description: "Portfolio URL has been copied to clipboard.",
+                });
+              }}
+              className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Copy URL
+            </button>
+          </div>
+        ) : null}
         <DialogFooter>
           <Button
             type="button"

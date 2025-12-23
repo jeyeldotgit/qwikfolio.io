@@ -1,3 +1,9 @@
+import { useState, useEffect } from "react";
+import { useAuthSession } from "./useAuthSession";
+import { getPortfolio } from "@/services/portfolio/portfolioService";
+import { getPortfolioStats } from "@/services/analytics/analyticsService";
+import supabase from "@/lib/supabase";
+
 type PortfolioStatus = "draft" | "published";
 
 type DashboardStats = {
@@ -7,35 +13,83 @@ type DashboardStats = {
   status: PortfolioStatus;
 };
 
+type DashboardState = "idle" | "loading" | "success" | "error";
+
 type UseDashboardResult = {
+  state: DashboardState;
   isLoading: boolean;
   portfolioExists: boolean;
   stats: DashboardStats | null;
+  error: string | null;
+  refetch: () => Promise<void>;
 };
 
 export const useDashboard = (): UseDashboardResult => {
-  // For MVP we mock portfolio presence + stats.
-  // Later this will be replaced with a real API or persisted state.
-  const portfolioExists = true;
+  const { user } = useAuthSession();
+  const [state, setState] = useState<DashboardState>("idle");
+  const [portfolioExists, setPortfolioExists] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!portfolioExists) {
-    return {
-      isLoading: false,
-      portfolioExists: false,
-      stats: null,
-    };
-  }
+  const fetchPortfolio = async () => {
+    if (!user) {
+      setState("idle");
+      setPortfolioExists(false);
+      setStats(null);
+      setError(null);
+      return;
+    }
 
-  const stats: DashboardStats = {
-    totalViews: 124,
-    resumeDownloads: 18,
-    lastViewed: "2025-01-04T15:32:00.000Z",
-    status: "published",
+    setState("loading");
+    setError(null);
+
+    try {
+      const portfolio = await getPortfolio(user.id);
+
+      if (portfolio) {
+        // Fetch published status from database
+        const { data: portfolioData } = await supabase
+          .from("portfolios")
+          .select("published")
+          .eq("user_id", user.id)
+          .single();
+
+        // Fetch analytics stats
+        const analyticsStats = await getPortfolioStats(user.id);
+
+        setPortfolioExists(true);
+        setStats({
+          totalViews: analyticsStats.totalViews,
+          resumeDownloads: analyticsStats.resumeDownloads,
+          lastViewed: analyticsStats.lastViewed,
+          status: portfolioData?.published ? "published" : "draft",
+        });
+        setState("success");
+      } else {
+        setPortfolioExists(false);
+        setStats(null);
+        setState("success");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch portfolio";
+      setError(errorMessage);
+      setState("error");
+      setPortfolioExists(false);
+      setStats(null);
+    }
   };
 
+  useEffect(() => {
+    fetchPortfolio();
+  }, [user]);
+
   return {
-    isLoading: false,
-    portfolioExists: true,
+    state,
+    isLoading: state === "loading",
+    portfolioExists,
     stats,
+    error,
+    refetch: fetchPortfolio,
   };
 };

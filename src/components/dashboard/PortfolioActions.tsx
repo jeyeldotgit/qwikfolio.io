@@ -28,7 +28,7 @@ export const PortfolioActions = ({
           className="flex-1 justify-center h-10 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
           onClick={onViewPortfolio}
         >
-          View Public Portfolio
+          View Portfolio
           <ArrowUpRight className="ml-2 h-4 w-4" />
         </Button>
         <Button

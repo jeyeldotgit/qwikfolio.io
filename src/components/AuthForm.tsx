@@ -5,6 +5,7 @@ import {
   signInWithEmail,
   signUpWithEmail,
 } from "@/services/auth/supabase-auth";
+import { useToast } from "@/hooks/useToast";
 
 type AuthMode = "signIn" | "signUp";
 
@@ -25,6 +26,7 @@ export const AuthForm = ({
 }: AuthFormProps) => {
   const { values, errors, isSubmitting, handleChange, handleSubmit } =
     useAuthForm(mode);
+  const { toast } = useToast();
 
   const onValid = (formValues: SignInFormValues | SignUpFormValues) => {
     const action = mode === "signUp" ? signUpWithEmail : signInWithEmail;
@@ -33,12 +35,28 @@ export const AuthForm = ({
       email: formValues.email,
       password: formValues.password,
     }).then((result) => {
-      if (!result) {
-        console.log("Authentication failed");
+      if ("error" in result) {
+        toast({
+          variant: "destructive",
+          title: mode === "signUp" ? "Sign up failed" : "Sign in failed",
+          description:
+            result.error ||
+            (mode === "signUp"
+              ? "Unable to create your account. Please try again."
+              : "Invalid email or password. Please check your credentials."),
+        });
         return;
       }
 
-      console.log("Authentication success", result);
+      toast({
+        variant: "success",
+        title: mode === "signUp" ? "Account created!" : "Welcome back!",
+        description:
+          mode === "signUp"
+            ? "Your account has been created successfully."
+            : "You've been signed in successfully.",
+      });
+
       if (onAuthSuccess) {
         onAuthSuccess(result?.user ?? null);
       }
@@ -139,7 +157,6 @@ export const AuthForm = ({
             <button
               type="button"
               className="text-indigo-600 dark:text-indigo-400 hover:underline"
-              onClick={() => console.log("Forgot password clicked")}
             >
               Forgot password?
             </button>

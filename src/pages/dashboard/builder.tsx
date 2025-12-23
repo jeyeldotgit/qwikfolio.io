@@ -11,6 +11,7 @@ import { EducationForm } from "@/components/builder/EducationForm";
 const DashboardBuilderPage = () => {
   const navigate = useNavigate();
   const {
+    state,
     portfolio,
     errors,
     updatePersonalInfo,
@@ -20,6 +21,21 @@ const DashboardBuilderPage = () => {
     updateEducation,
     handleSave,
   } = usePortfolioBuilder();
+
+  const isLoading = state === "loading";
+  const isSaving = state === "loading" && portfolio !== null;
+
+  if (isLoading && !portfolio) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!portfolio) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -47,9 +63,16 @@ const DashboardBuilderPage = () => {
             <Button
               type="button"
               className="h-9 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
-              onClick={handleSave}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isSaving) {
+                  handleSave();
+                }
+              }}
+              disabled={isSaving}
             >
-              Save Portfolio
+              {isSaving ? "Saving..." : "Save Portfolio"}
             </Button>
           </div>
         </div>

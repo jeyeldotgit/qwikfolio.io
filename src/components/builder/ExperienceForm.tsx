@@ -1,8 +1,6 @@
 import type { Experience } from "@/schemas/portfolio";
-import { useState } from "react";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
-import { FormActions } from "@/components/form/FormActions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,18 +9,14 @@ import { Button } from "@/components/ui/button";
 type ExperienceFormProps = {
   value: Experience[];
   onChange: (value: Experience[]) => void;
-  onSubmitSection?: () => void;
   className?: string;
 };
 
 export const ExperienceForm = ({
   value,
   onChange,
-  onSubmitSection,
   className,
 }: ExperienceFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleExperienceChange = (index: number, updated: Experience) => {
     onChange(value.map((exp, idx) => (idx === index ? updated : exp)));
   };
@@ -46,20 +40,13 @@ export const ExperienceForm = ({
     ]);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    onSubmitSection?.();
-    setTimeout(() => setIsSubmitting(false), 150);
-  };
-
   return (
     <FormCard
       title="Experience"
       description="Capture the roles and impact that matter most."
       className={className}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {value.map((exp, index) => (
           <FormSection key={exp.id ?? index} title={`Experience ${index + 1}`}>
             <div className="space-y-4">
@@ -188,9 +175,7 @@ export const ExperienceForm = ({
             Add another role
           </Button>
         </div>
-
-        <FormActions isSubmitting={isSubmitting} primaryLabel="Save experience" />
-      </form>
+      </div>
     </FormCard>
   );
 };

@@ -9,10 +9,12 @@ import {
 } from "@/services/profile/profileService";
 import { uploadAvatar } from "@/services/storage/avatarStorageService";
 import { Upload, X } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
 
 const ProfileCompletionPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthSession();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -99,14 +101,31 @@ const ProfileCompletionPage = () => {
           });
 
       if (!result) {
-        setError("Failed to save profile. Please try again.");
+        const errorMessage = "Failed to save profile. Please try again.";
+        setError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Profile update failed",
+          description: errorMessage,
+        });
         setIsSubmitting(false);
         return;
       }
 
+      toast({
+        variant: "success",
+        title: "Profile completed!",
+        description: "Your profile has been saved successfully.",
+      });
       navigate("/dashboard");
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      const errorMessage = "An error occurred. Please try again.";
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
       setIsSubmitting(false);
     }
   };

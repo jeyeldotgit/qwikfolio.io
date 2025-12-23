@@ -1,12 +1,36 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePortfolioPreview } from "@/hooks/usePortfolioPreview";
 import { PortfolioPreview } from "@/components/preview/PortfolioPreview";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { trackResumeDownload } from "@/services/analytics/analyticsService";
 
 const DashboardPreviewPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuthSession();
   const { isLoading, portfolio } = usePortfolioPreview();
+  const shouldPrint = searchParams.get("print") === "true";
+
+  useEffect(() => {
+    if (shouldPrint && portfolio && !isLoading) {
+      // Small delay to ensure content is fully rendered
+      const timer = setTimeout(async () => {
+        // Track download before printing
+        if (user?.id) {
+          await trackResumeDownload(user.id);
+        }
+
+        window.print();
+        // Remove print param from URL after triggering print
+        navigate("/dashboard/preview", { replace: true });
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [shouldPrint, portfolio, isLoading, navigate, user]);
 
   if (isLoading) {
     return (
@@ -35,7 +59,16 @@ const DashboardPreviewPage = () => {
             >
               Edit portfolio
             </Button>
-            <Button type="button" size="sm" onClick={() => window.print()}>
+            <Button
+              type="button"
+              size="sm"
+              onClick={async () => {
+                if (user?.id) {
+                  await trackResumeDownload(user.id);
+                }
+                window.print();
+              }}
+            >
               Print / Save as PDF
             </Button>
           </div>

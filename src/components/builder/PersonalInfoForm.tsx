@@ -1,27 +1,21 @@
 import type { PersonalInfo } from "@/schemas/portfolio";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
-import { FormActions } from "@/components/form/FormActions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
 
 type PersonalInfoFormProps = {
   value: PersonalInfo;
   onChange: (value: PersonalInfo) => void;
-  onSubmitSection?: () => void;
   className?: string;
 };
 
 export const PersonalInfoForm = ({
   value,
   onChange,
-  onSubmitSection,
   className,
 }: PersonalInfoFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleFieldChange = <K extends keyof PersonalInfo>(
     field: K,
     fieldValue: PersonalInfo[K]
@@ -32,24 +26,13 @@ export const PersonalInfoForm = ({
     });
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    onSubmitSection?.();
-    console.log("PersonalInfoForm submitted:", value);
-    // mimic quick submit feel; real persistence is handled by parent save
-    setTimeout(() => {
-      setIsSubmitting(false);
-    }, 150);
-  };
-
   return (
     <FormCard
       title="Personal Information"
       description="Tell us about yourself"
       className={className}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         <FormSection title="Basic Information">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -165,12 +148,7 @@ export const PersonalInfoForm = ({
             </div>
           </div>
         </FormSection>
-
-        <FormActions
-          isSubmitting={isSubmitting}
-          primaryLabel="Save personal info"
-        />
-      </form>
+      </div>
     </FormCard>
   );
 };

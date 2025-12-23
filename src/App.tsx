@@ -5,6 +5,7 @@ import DashboardPage from "./pages/dashboard";
 import DashboardBuilderPage from "./pages/dashboard/builder";
 import DashboardPreviewPage from "./pages/dashboard/preview";
 import ProfileCompletionPage from "./pages/dashboard/profile-completion";
+import PublicPortfolioPage from "./pages/PublicPortfolioPage";
 import { ProtectedRoute } from "./components/route/ProtectedRoute";
 
 const App = () => {
@@ -44,6 +45,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/:username" element={<PublicPortfolioPage />} />
     </Routes>
   );
 };

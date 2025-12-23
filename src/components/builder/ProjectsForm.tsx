@@ -1,8 +1,6 @@
 import type { Project } from "@/schemas/portfolio";
-import { useState } from "react";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
-import { FormActions } from "@/components/form/FormActions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,18 +9,34 @@ import { Button } from "@/components/ui/button";
 type ProjectsFormProps = {
   value: Project[];
   onChange: (value: Project[]) => void;
-  onSubmitSection?: () => void;
   className?: string;
 };
+
+const TECH_STACK_OPTIONS = [
+  "TypeScript",
+  "JavaScript",
+  "React",
+  "Next.js",
+  "Node.js",
+  "TailwindCSS",
+  "Python",
+  "Django",
+  "Express",
+  "Vue",
+  "Svelte",
+  "Go",
+  "Rust",
+  "PostgreSQL",
+  "MongoDB",
+  "Prisma",
+  "Other",
+];
 
 export const ProjectsForm = ({
   value,
   onChange,
-  onSubmitSection,
   className,
 }: ProjectsFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleProjectChange = (index: number, updated: Project) => {
     onChange(value.map((project, idx) => (idx === index ? updated : project)));
   };
@@ -45,11 +59,22 @@ export const ProjectsForm = ({
     ]);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    onSubmitSection?.();
-    setTimeout(() => setIsSubmitting(false), 150);
+  const handleAddTechStack = (index: number, tech: string) => {
+    const project = value[index];
+    if (!project.techStack.includes(tech)) {
+      handleProjectChange(index, {
+        ...project,
+        techStack: [...project.techStack, tech],
+      });
+    }
+  };
+
+  const handleRemoveTechStack = (index: number, techToRemove: string) => {
+    const project = value[index];
+    handleProjectChange(index, {
+      ...project,
+      techStack: project.techStack.filter((tech) => tech !== techToRemove),
+    });
   };
 
   return (
@@ -58,7 +83,7 @@ export const ProjectsForm = ({
       description="Show the work that best represents what you can do."
       className={className}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {value.map((project, index) => (
           <FormSection key={project.id ?? index} title={`Project ${index + 1}`}>
             <div className="space-y-4">
@@ -71,7 +96,10 @@ export const ProjectsForm = ({
                   placeholder="e.g., QwikFolio"
                   value={project.name}
                   onChange={(event) =>
-                    handleProjectChange(index, { ...project, name: event.target.value })
+                    handleProjectChange(index, {
+                      ...project,
+                      name: event.target.value,
+                    })
                   }
                 />
               </div>
@@ -94,26 +122,55 @@ export const ProjectsForm = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`project-tech-${index}`} required>
-                  Tech Stack (comma separated)
+                  Tech Stack
                 </Label>
-                <Input
-                  id={`project-tech-${index}`}
-                  placeholder="TypeScript, React, Tailwind CSS"
-                  value={project.techStack.join(", ")}
-                  onChange={(event) =>
-                    handleProjectChange(index, {
-                      ...project,
-                      techStack: event.target.value
-                        .split(",")
-                        .map((item) => item.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {project.techStack.map((tech) => (
+                      <button
+                        key={tech}
+                        type="button"
+                        onClick={() => handleRemoveTechStack(index, tech)}
+                        className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50"
+                      >
+                        <span>{tech}</span>
+                        <span className="ml-1.5 text-indigo-600 dark:text-indigo-300">
+                          ×
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+                    <div className="space-y-2">
+                      <select
+                        id={`project-tech-${index}`}
+                        value=""
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            handleAddTechStack(index, event.target.value);
+                            event.target.value = "";
+                          }
+                        }}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                      >
+                        <option value="">Select a technology...</option>
+                        {TECH_STACK_OPTIONS.filter(
+                          (tech) => !project.techStack.includes(tech)
+                        ).map((tech) => (
+                          <option key={tech} value={tech}>
+                            {tech}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`project-repo-${index}`}>Repository URL</Label>
+                  <Label htmlFor={`project-repo-${index}`}>
+                    Repository URL (optional)
+                  </Label>
                   <Input
                     id={`project-repo-${index}`}
                     type="url"
@@ -128,7 +185,9 @@ export const ProjectsForm = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`project-live-${index}`}>Live URL</Label>
+                  <Label htmlFor={`project-live-${index}`}>
+                    Live URL (optional)
+                  </Label>
                   <Input
                     id={`project-live-${index}`}
                     type="url"
@@ -160,15 +219,16 @@ export const ProjectsForm = ({
         ))}
 
         <div className="flex justify-start">
-          <Button type="button" size="sm" variant="outline" onClick={handleAddProject}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleAddProject}
+          >
             Add another project
           </Button>
         </div>
-
-        <FormActions isSubmitting={isSubmitting} primaryLabel="Save projects" />
-      </form>
+      </div>
     </FormCard>
   );
 };
-
-

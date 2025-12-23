@@ -1,8 +1,6 @@
 import type { Education } from "@/schemas/portfolio";
-import { useState } from "react";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
-import { FormActions } from "@/components/form/FormActions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,18 +9,14 @@ import { Button } from "@/components/ui/button";
 type EducationFormProps = {
   value: Education[];
   onChange: (value: Education[]) => void;
-  onSubmitSection?: () => void;
   className?: string;
 };
 
 export const EducationForm = ({
   value,
   onChange,
-  onSubmitSection,
   className,
 }: EducationFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleEducationChange = (index: number, updated: Education) => {
     onChange(value.map((edu, idx) => (idx === index ? updated : edu)));
   };
@@ -47,20 +41,13 @@ export const EducationForm = ({
     ]);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    onSubmitSection?.();
-    setTimeout(() => setIsSubmitting(false), 150);
-  };
-
   return (
     <FormCard
       title="Education"
       description="Add the education that supports your story."
       className={className}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {value.map((edu, index) => (
           <FormSection key={edu.id ?? index} title={`Education ${index + 1}`}>
             <div className="space-y-4">
@@ -213,12 +200,7 @@ export const EducationForm = ({
             Add another school
           </Button>
         </div>
-
-        <FormActions
-          isSubmitting={isSubmitting}
-          primaryLabel="Save education"
-        />
-      </form>
+      </div>
     </FormCard>
   );
 };

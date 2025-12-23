@@ -13,7 +13,7 @@ export const signUpWithEmail = async (
     email: formData.email,
     password: formData.password,
     options: {
-      emailRedirectTo: `${import.meta.env.VITE_APP_URL}/dashboard`,
+      emailRedirectTo: `${import.meta.env.VITE_APP_URL}/onboarding`,
     },
   });
 
@@ -64,12 +64,50 @@ export const getCurrentUser = async (): Promise<User | null> => {
 };
 
 export const getCurrentSession = async (): Promise<Session | null> => {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error(error);
+  try {
+    // getSession() reads from localStorage and returns the current session
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("Error getting session:", error);
+      return null;
+    }
+
+    // If session exists and is valid, return it
+    if (data?.session) {
+      return data.session;
+    }
+
+    // If no session but we might have a token, try getUser() to validate
+    // This will throw if token is invalid/expired
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      // Token is invalid/expired, clear it
+      console.error("User token invalid:", userError);
+      await supabase.auth.signOut();
+      return null;
+    }
+
+    // If we have a user but no session, the session might have expired
+    // Try to refresh it
+    if (userData?.user) {
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.error("Error refreshing session:", refreshError);
+        return null;
+      }
+
+      return refreshData?.session ?? null;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Unexpected error in getCurrentSession:", error);
     return null;
   }
-  return data.session ?? null;
 };
 
 export const subscribeToAuthChanges = (

@@ -124,7 +124,7 @@ const AuthPage = () => {
                 mode={mode}
                 onAuthSuccess={async (user) => {
                   if (!user?.id) {
-                    navigate("/dashboard/profile-completion");
+                    navigate("/onboarding");
                     return;
                   }
 
@@ -133,7 +133,7 @@ const AuthPage = () => {
                   if (profile?.onboarding_completed) {
                     navigate("/dashboard");
                   } else {
-                    navigate("/dashboard/profile-completion");
+                    navigate("/onboarding");
                   }
                 }}
               />

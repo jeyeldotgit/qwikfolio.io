@@ -15,6 +15,7 @@ const ProfileCompletionPage = () => {
   const { user } = useAuthSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,16 +85,17 @@ const ProfileCompletionPage = () => {
       const result = existingProfile
         ? await updateProfile(user.id, {
             full_name: fullName.trim() || null,
+            username: username.trim() || null,
             avatar_url: avatarUrl,
             onboarding_completed: true,
           })
         : await createProfile(user.id, {
             full_name: fullName.trim() || null,
+            username: username.trim() || null,
             avatar_url: avatarUrl,
             onboarding_completed: true,
             plan: "free",
-            username: null,
-            last_seen_at: null,
+            last_seen_at: new Date().toISOString(),
           });
 
       if (!result) {
@@ -191,6 +193,20 @@ const ProfileCompletionPage = () => {
               placeholder="Alex Developer"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
+            />
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              placeholder="alex_developer"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
             />
           </div>
 

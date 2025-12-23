@@ -6,6 +6,7 @@ import {
   signOut as supabaseSignOut,
   subscribeToAuthChanges,
 } from "@/services/auth/supabase-auth";
+import supabase from "@/lib/supabase";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -36,8 +37,49 @@ export const AuthSessionProvider = ({ children }: AuthSessionProviderProps) => {
 
   useEffect(() => {
     let isMounted = true;
+    let hasInitialized = false;
 
-    const init = async () => {
+    // Use onAuthStateChange which fires immediately with INITIAL_SESSION
+    const unsubscribe = subscribeToAuthChanges(async (session) => {
+      if (!isMounted) return;
+
+      if (session) {
+        setState({
+          status: "authenticated",
+          user: session.user,
+          session,
+        });
+        hasInitialized = true;
+      } else {
+        // Check if there's a user without a session (email confirmation pending)
+        const { data: userData } = await supabase.auth.getUser();
+
+        if (userData?.user && !userData.user.email_confirmed_at) {
+          // User exists but email not confirmed - treat as unauthenticated
+          // Clear the user data since they can't access protected routes
+          await supabase.auth.signOut();
+          setState({
+            status: "unauthenticated",
+            user: null,
+            session: null,
+          });
+        } else {
+          setState({
+            status: "unauthenticated",
+            user: null,
+            session: null,
+          });
+        }
+        hasInitialized = true;
+      }
+    });
+
+    // Fallback: if onAuthStateChange doesn't fire quickly enough, check manually
+    const fallbackCheck = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      if (!isMounted || hasInitialized) return;
+
       const session = await getCurrentSession();
 
       if (!isMounted) return;
@@ -49,6 +91,14 @@ export const AuthSessionProvider = ({ children }: AuthSessionProviderProps) => {
           session,
         });
       } else {
+        // Check if user exists but email not confirmed
+        const { data: userData } = await supabase.auth.getUser();
+
+        if (userData?.user && !userData.user.email_confirmed_at) {
+          // User exists but email not confirmed - sign them out
+          await supabase.auth.signOut();
+        }
+
         setState({
           status: "unauthenticated",
           user: null,
@@ -57,25 +107,7 @@ export const AuthSessionProvider = ({ children }: AuthSessionProviderProps) => {
       }
     };
 
-    init();
-
-    const unsubscribe = subscribeToAuthChanges((session) => {
-      if (!isMounted) return;
-
-      if (session) {
-        setState({
-          status: "authenticated",
-          user: session.user,
-          session,
-        });
-      } else {
-        setState({
-          status: "unauthenticated",
-          user: null,
-          session: null,
-        });
-      }
-    });
+    fallbackCheck();
 
     return () => {
       isMounted = false;
@@ -108,10 +140,10 @@ export const useAuthSession = (): AuthSessionContextValue => {
   const context = useContext(AuthSessionContext);
 
   if (!context) {
-    throw new Error("useAuthSession must be used within an AuthSessionProvider");
+    throw new Error(
+      "useAuthSession must be used within an AuthSessionProvider"
+    );
   }
 
   return context;
 };
-
-

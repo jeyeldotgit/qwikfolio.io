@@ -51,12 +51,7 @@ const LandingPage = () => {
               >
                 Features
               </a>
-              <a
-                href="#pricing"
-                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                Pricing
-              </a>
+
               <a
                 href="#contact"
                 className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"

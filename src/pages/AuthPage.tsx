@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { AuthForm } from "@/components/AuthForm";
 import { Github, Mail, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getProfile } from "@/services/profile/profileService";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -108,6 +109,21 @@ const AuthPage = () => {
                 title="Sign in to QwikFolio"
                 subtitle="Use your email and password to access your workspace."
                 submitLabel="Continue with email"
+                mode="signIn"
+                onAuthSuccess={async (user) => {
+                  if (!user?.id) {
+                    navigate("/dashboard/profile-completion");
+                    return;
+                  }
+
+                  const profile = await getProfile(user.id);
+
+                  if (profile?.onboarding_completed) {
+                    navigate("/dashboard");
+                  } else {
+                    navigate("/dashboard/profile-completion");
+                  }
+                }}
               />
             </div>
 

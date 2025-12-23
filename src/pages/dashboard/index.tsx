@@ -4,6 +4,8 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { PortfolioActions } from "@/components/dashboard/PortfolioActions";
 import { CompletionBadge } from "@/components/dashboard/CompletionBadge";
+import { ProfileMenu } from "@/components/dashboard/ProfileMenu";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import {
   Dialog,
   DialogHeader,
@@ -14,9 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuthSession();
+  const { profile } = useProfile();
   const { isLoading, portfolioExists, stats } = useDashboard();
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [statusOverride, setStatusOverride] = useState<
@@ -36,6 +41,15 @@ const DashboardPage = () => {
   const handleEditPortfolio = () => {
     console.log("Edit portfolio clicked");
     navigate("/dashboard/builder");
+  };
+
+  const handleEditProfile = () => {
+    console.log("Edit profile clicked");
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
   };
 
   const handleDownloadResume = () => {
@@ -72,7 +86,7 @@ const DashboardPage = () => {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <button
               type="button"
               className="flex items-center space-x-2"
@@ -83,6 +97,11 @@ const DashboardPage = () => {
                 QwikFolio.io
               </span>
             </button>
+            <ProfileMenu
+              displayName={profile?.full_name ?? user?.email ?? null}
+              onEditProfile={handleEditProfile}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
         <main>
@@ -108,7 +127,14 @@ const DashboardPage = () => {
               QwikFolio.io
             </span>
           </button>
-          <CompletionBadge status={effectiveStatus} />
+          <div className="flex items-center gap-4">
+            <CompletionBadge status={effectiveStatus} />
+            <ProfileMenu
+              displayName={profile?.full_name ?? user?.email ?? null}
+              onEditProfile={handleEditProfile}
+              onLogout={handleLogout}
+            />
+          </div>
         </div>
       </header>
 

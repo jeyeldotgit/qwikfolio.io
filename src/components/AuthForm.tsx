@@ -1,35 +1,61 @@
 import { useAuthForm } from "@/hooks/useAuthForm";
 import type { AuthFormValues } from "@/schemas/auth";
 import { Button } from "@/components/ui/button";
+import {
+  signInWithEmail,
+  signUpWithEmail,
+} from "@/services/auth/supabase-auth";
+
+type AuthMode = "signIn" | "signUp";
 
 type AuthFormProps = {
   title: string;
   subtitle?: string;
   submitLabel?: string;
+  mode?: AuthMode;
+  onAuthSuccess?: (user: { id: string } | null) => void;
 };
 
-export const AuthForm = ({ title, subtitle, submitLabel = "Continue" }: AuthFormProps) => {
-  const { values, errors, isSubmitting, handleChange, handleSubmit } = useAuthForm();
+export const AuthForm = ({
+  title,
+  subtitle,
+  submitLabel = "Continue",
+  mode = "signIn",
+  onAuthSuccess,
+}: AuthFormProps) => {
+  const { values, errors, isSubmitting, handleChange, handleSubmit } =
+    useAuthForm();
 
   const onValid = (formValues: AuthFormValues) => {
-    // For now, just log the values. Backend will be wired later.
-    console.log("Auth form submitted", formValues);
+    const action = mode === "signUp" ? signUpWithEmail : signInWithEmail;
+
+    action(formValues).then((result) => {
+      if (!result) {
+        console.log("Authentication failed");
+        return;
+      }
+
+      console.log("Authentication success", result);
+      if (onAuthSuccess) {
+        onAuthSuccess(result?.user ?? null);
+      }
+    });
   };
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-6 sm:p-8 w-full max-w-md mx-auto">
       <div className="mb-6 text-center">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">{title}</h2>
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+          {title}
+        </h2>
         {subtitle ? (
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            {subtitle}
+          </p>
         ) : null}
       </div>
 
-      <form
-        className="space-y-4"
-        onSubmit={handleSubmit(onValid)}
-        noValidate
-      >
+      <form className="space-y-4" onSubmit={handleSubmit(onValid)} noValidate>
         <div>
           <label
             htmlFor="email"
@@ -47,7 +73,9 @@ export const AuthForm = ({ title, subtitle, submitLabel = "Continue" }: AuthForm
             onChange={(event) => handleChange("email", event.target.value)}
           />
           {errors.email ? (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.email}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {errors.email}
+            </p>
           ) : null}
         </div>
 
@@ -68,7 +96,9 @@ export const AuthForm = ({ title, subtitle, submitLabel = "Continue" }: AuthForm
             onChange={(event) => handleChange("password", event.target.value)}
           />
           {errors.password ? (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.password}</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {errors.password}
+            </p>
           ) : null}
         </div>
 
@@ -93,5 +123,3 @@ export const AuthForm = ({ title, subtitle, submitLabel = "Continue" }: AuthForm
     </div>
   );
 };
-
-

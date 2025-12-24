@@ -108,6 +108,7 @@ export const ExperienceForm = ({
                     id={`exp-end-${index}`}
                     placeholder="2024-06"
                     value={exp.endDate ?? ""}
+                    disabled={exp.current}
                     onChange={(event) =>
                       handleExperienceChange(index, {
                         ...exp,
@@ -171,7 +172,12 @@ export const ExperienceForm = ({
         ))}
 
         <div className="flex justify-start">
-          <Button type="button" size="sm" variant="outline" onClick={handleAddExperience}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleAddExperience}
+          >
             Add another role
           </Button>
         </div>
@@ -179,5 +185,3 @@ export const ExperienceForm = ({
     </FormCard>
   );
 };
-
-

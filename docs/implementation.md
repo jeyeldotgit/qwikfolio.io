@@ -87,7 +87,9 @@
 
 - `src/pages/dashboard/builder.tsx` - Builder page
 - `src/hooks/usePortfolioBuilder.ts` - Builder state and save logic
-- `src/services/portfolio/portfolioService.ts` - Portfolio CRUD operations
+- `src/services/portfolio/portfolioService.ts` - Portfolio service (modular structure)
+  - Main barrel file that re-exports all functions
+  - See `docs/api.md` for detailed service structure
 - `src/components/builder/*.tsx` - Form section components
 
 ---
@@ -135,7 +137,7 @@
 ### Files
 
 - `src/pages/PublicPortfolioPage.tsx` - Public portfolio page
-- `src/services/portfolio/portfolioService.ts` - `getPublicPortfolioByUsername()`
+- `src/services/portfolio/portfolioService.ts` - `getPublicPortfolioByUsername()` (from `portfolio-fetch.ts`)
 - `src/services/profile/profileService.ts` - `getProfileByUsername()`
 
 ---
@@ -154,6 +156,7 @@
 ### Tracking Events
 
 1. **Portfolio Views**
+
    - Tracked when public portfolio is loaded
    - Uses RPC function `track_portfolio_view()` for anonymous tracking
 

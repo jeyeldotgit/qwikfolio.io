@@ -6,11 +6,46 @@ This document describes the service layer APIs and their usage.
 
 ## Portfolio Service
 
-**File**: `src/services/portfolio/portfolioService.ts`
+**Main Entry Point**: `src/services/portfolio/portfolioService.ts`
+
+The portfolio service has been refactored into a modular structure for better maintainability:
+
+### Service Structure
+
+```
+src/services/portfolio/
+├── portfolioService.ts          # Main barrel file (re-exports all functions)
+├── portfolio-errors.ts          # PortfolioServiceError class
+├── portfolio-fetch.ts           # Fetch operations
+├── portfolio-fetch-helpers.ts   # Helper functions for fetching sections
+├── portfolio-assemble.ts        # Portfolio assembly logic
+├── portfolio-mutations.ts       # Create/update/delete operations
+└── forms/
+    └── portfolio-form-actions.ts # Section-specific save operations
+```
+
+### Public API
+
+All functions are exported from `portfolioService.ts`:
+
+```typescript
+import {
+  getPortfolio,
+  getPublicPortfolioByUsername,
+  createOrUpdatePortfolio,
+  updatePortfolioPublishedStatus,
+  deletePortfolioSection,
+  PortfolioServiceError,
+} from "@/services/portfolio/portfolioService";
+```
+
+---
 
 ### `getPortfolio(userId: string): Promise<Portfolio | null>`
 
 Fetches a user's portfolio from the database.
+
+**File**: `portfolio-fetch.ts`
 
 **Parameters:**
 
@@ -24,6 +59,12 @@ Fetches a user's portfolio from the database.
 
 - `PortfolioServiceError` - If database operation fails
 
+**Implementation Details:**
+
+- Fetches portfolio data, skills, projects, experience, and education in parallel
+- Fetches tech stack for all projects
+- Assembles and validates the complete portfolio object
+
 **Example:**
 
 ```typescript
@@ -35,9 +76,43 @@ if (portfolio) {
 
 ---
 
+### `getPublicPortfolioByUsername(username: string): Promise<Portfolio | null>`
+
+Fetches a published portfolio by username for public viewing.
+
+**File**: `portfolio-fetch.ts`
+
+**Parameters:**
+
+- `username` - The profile username
+
+**Returns:**
+
+- `Portfolio | null` - Portfolio data or null if not found/not published
+
+**Throws:**
+
+- `PortfolioServiceError` - If profile not found, portfolio not found, or not published
+
+**Implementation Details:**
+
+- First resolves username to user ID via profiles table
+- Only returns portfolios with `published: true`
+- Uses the same fetching and assembly logic as `getPortfolio`
+
+**Example:**
+
+```typescript
+const publicPortfolio = await getPublicPortfolioByUsername("johndoe");
+```
+
+---
+
 ### `createOrUpdatePortfolio(userId: string, portfolio: Portfolio): Promise<Portfolio>`
 
 Creates or updates a user's portfolio in the database.
+
+**File**: `portfolio-mutations.ts`
 
 **Parameters:**
 
@@ -52,40 +127,22 @@ Creates or updates a user's portfolio in the database.
 
 - `PortfolioServiceError` - If validation fails or database operation fails
 
+**Implementation Details:**
+
+- Validates input with `portfolioSchema` before saving
+- Preserves `published` status on update
+- Upserts personal info in `portfolios` table
+- Delegates section saves to `portfolio-form-actions.ts`:
+  - `saveSkills()` - Replaces all skills
+  - `saveProjects()` - Upserts projects and tech stack
+  - `saveExperience()` - Replaces all experience entries
+  - `saveEducation()` - Replaces all education entries
+- Fetches and returns the complete saved portfolio
+
 **Example:**
 
 ```typescript
 const savedPortfolio = await createOrUpdatePortfolio(user.id, portfolioData);
-```
-
-**Notes:**
-
-- Preserves `published` status on update
-- Validates data with `portfolioSchema` before saving
-- Replaces all related data (skills, projects, etc.)
-
----
-
-### `getPublicPortfolioByUsername(username: string): Promise<Portfolio | null>`
-
-Fetches a published portfolio by username for public viewing.
-
-**Parameters:**
-
-- `username` - The profile username
-
-**Returns:**
-
-- `Portfolio | null` - Portfolio data or null if not found/not published
-
-**Throws:**
-
-- `PortfolioServiceError` - If portfolio not found or not published
-
-**Example:**
-
-```typescript
-const publicPortfolio = await getPublicPortfolioByUsername("johndoe");
 ```
 
 ---
@@ -93,6 +150,8 @@ const publicPortfolio = await getPublicPortfolioByUsername("johndoe");
 ### `updatePortfolioPublishedStatus(userId: string, published: boolean): Promise<void>`
 
 Updates the published status of a portfolio.
+
+**File**: `portfolio-mutations.ts`
 
 **Parameters:**
 
@@ -120,6 +179,8 @@ await updatePortfolioPublishedStatus(user.id, false); // Unpublish
 
 Deletes a specific section from a portfolio.
 
+**File**: `portfolio-mutations.ts`
+
 **Parameters:**
 
 - `userId` - The authenticated user's ID
@@ -132,6 +193,43 @@ Deletes a specific section from a portfolio.
 **Throws:**
 
 - `PortfolioServiceError` - If database operation fails
+
+**Implementation Details:**
+
+- For `"projects"`: Also deletes associated tech stack entries
+- Other sections: Direct deletion of all user's entries
+
+**Example:**
+
+```typescript
+await deletePortfolioSection(user.id, "skills");
+await deletePortfolioSection(user.id, "projects");
+```
+
+---
+
+### Internal Helper Functions
+
+These functions are used internally but can be imported directly if needed:
+
+#### Fetch Helpers (`portfolio-fetch-helpers.ts`)
+
+- `fetchSkills(userId)` - Fetches all skills for a user
+- `fetchProjects(userId)` - Fetches all projects for a user
+- `fetchTechStack(projectIds)` - Fetches tech stack for given project IDs
+- `fetchExperience(userId)` - Fetches all experience entries for a user
+- `fetchEducation(userId)` - Fetches all education entries for a user
+
+#### Assembly (`portfolio-assemble.ts`)
+
+- `assemblePortfolio(portfolioData, skillsData, projectsData, techStackMap, experienceData, educationData)` - Assembles and validates a complete Portfolio object from database data
+
+#### Form Actions (`forms/portfolio-form-actions.ts`)
+
+- `saveSkills(userId, skills)` - Replaces all skills (delete + insert)
+- `saveProjects(userId, projects)` - Upserts projects and their tech stack
+- `saveExperience(userId, experience)` - Replaces all experience entries
+- `saveEducation(userId, education)` - Replaces all education entries
 
 ---
 
@@ -376,17 +474,23 @@ Deletes a user's avatar.
 
 All services throw typed errors:
 
-- `PortfolioServiceError` - Portfolio operation errors
+- `PortfolioServiceError` - Portfolio operation errors (from `portfolio-errors.ts`)
 - `AnalyticsServiceError` - Analytics operation errors
 
 **Error Structure:**
 
 ```typescript
-class ServiceError extends Error {
+class PortfolioServiceError extends Error {
   code?: string;
   constructor(message: string, code?: string);
 }
 ```
+
+**Error Properties:**
+
+- `message` - Human-readable error message
+- `code` - Optional database error code (e.g., Supabase error codes)
+- `name` - Always `"PortfolioServiceError"`
 
 **Example Error Handling:**
 
@@ -396,6 +500,10 @@ try {
 } catch (error) {
   if (error instanceof PortfolioServiceError) {
     console.error(`Portfolio error: ${error.message}`, error.code);
+    // Handle specific error codes if needed
+    if (error.code === "PGRST116") {
+      // Handle "not found" case
+    }
   }
 }
 ```

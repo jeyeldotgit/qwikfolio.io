@@ -37,25 +37,31 @@ Define data shape and validation rules.
 Encapsulate all behavior and state:
 
 **Authentication:**
+
 - `useAuthSession` - Manages Supabase session state
 - `useAuthForm` - Form state and validation for auth
 
 **Dashboard:**
+
 - `useDashboard` - Portfolio stats and status
 
 **Portfolio:**
+
 - `usePortfolioBuilder` - Portfolio editing and saving
 - `usePortfolioPreview` - Portfolio preview data
 
 **Profile:**
+
 - `useProfile` - User profile data
 
 **UI:**
+
 - `useToast` - Toast notification system
 
 ### Pages (`src/pages`)
 
 Route-level composition only:
+
 - `LandingPage` - Homepage
 - `AuthPage` - Authentication page
 - `dashboard/index.tsx` - Dashboard
@@ -67,9 +73,11 @@ Route-level composition only:
 ### Components (`src/components`)
 
 **UI Components** (`src/components/ui/`):
+
 - Button, Card, Dialog, Toast, Toaster, etc. (shadcn/ui style)
 
 **Domain Components**:
+
 - `builder/*` - Portfolio builder form sections
 - `dashboard/*` - Dashboard-specific components
 - `preview/*` - Portfolio preview components
@@ -80,18 +88,29 @@ Route-level composition only:
 Pure business logic, no React dependencies:
 
 **Portfolio:**
-- `portfolio/portfolioService.ts` - Portfolio CRUD operations
+
+- `portfolio/portfolioService.ts` - Main barrel file (re-exports all functions)
+- `portfolio/portfolio-errors.ts` - Error class definition
+- `portfolio/portfolio-fetch.ts` - Fetch operations (getPortfolio, getPublicPortfolioByUsername)
+- `portfolio/portfolio-fetch-helpers.ts` - Helper functions for fetching individual sections
+- `portfolio/portfolio-assemble.ts` - Portfolio assembly and validation logic
+- `portfolio/portfolio-mutations.ts` - Create/update/delete operations
+- `portfolio/forms/portfolio-form-actions.ts` - Section-specific save operations
 
 **Profile:**
+
 - `profile/profileService.ts` - Profile management
 
 **Authentication:**
+
 - `auth/supabase-auth.ts` - Auth operations
 
 **Analytics:**
+
 - `analytics/analyticsService.ts` - Stats tracking
 
 **Storage:**
+
 - `storage/avatarStorageService.ts` - File uploads
 
 ---
@@ -99,22 +118,24 @@ Pure business logic, no React dependencies:
 ## Folder Structure
 
 src/
-├─ schemas/          # Zod schemas and type definitions
-├─ hooks/            # React hooks for state and behavior
-├─ components/       # React components
-│  ├─ ui/           # Reusable UI components
-│  ├─ builder/      # Portfolio builder components
-│  ├─ dashboard/    # Dashboard components
-│  ├─ preview/      # Preview components
-│  └─ route/        # Routing components
-├─ pages/            # Route-level page components
-├─ services/         # Business logic services
-│  ├─ portfolio/    # Portfolio operations
-│  ├─ profile/       # Profile operations
-│  ├─ auth/         # Authentication
-│  ├─ analytics/    # Analytics tracking
-│  └─ storage/      # File storage
-└─ lib/              # Third-party integrations (Supabase, etc.)
+├─ schemas/ # Zod schemas and type definitions
+├─ hooks/ # React hooks for state and behavior
+├─ components/ # React components
+│ ├─ ui/ # Reusable UI components
+│ ├─ builder/ # Portfolio builder components
+│ ├─ dashboard/ # Dashboard components
+│ ├─ preview/ # Preview components
+│ └─ route/ # Routing components
+├─ pages/ # Route-level page components
+├─ services/ # Business logic services
+│ ├─ portfolio/ # Portfolio operations (modular structure)
+│ │ ├─ forms/ # Section-specific save operations
+│ │ └─ \*.ts # Fetch, mutations, assembly, errors
+│ ├─ profile/ # Profile operations
+│ ├─ auth/ # Authentication
+│ ├─ analytics/ # Analytics tracking
+│ └─ storage/ # File storage
+└─ lib/ # Third-party integrations (Supabase, etc.)
 
 ---
 
@@ -123,6 +144,7 @@ src/
 ### State Machine Pattern
 
 Hooks use a consistent state machine:
+
 - `idle` - Initial state
 - `loading` - Operation in progress
 - `success` - Operation completed successfully

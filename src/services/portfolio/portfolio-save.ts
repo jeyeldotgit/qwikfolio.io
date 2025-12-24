@@ -1,5 +1,5 @@
 import supabase from "@/lib/supabase";
-import { PortfolioServiceError } from "../portfolio-errors";
+import { PortfolioServiceError } from "./portfolio-errors";
 import type { Portfolio } from "@/schemas/portfolio";
 
 export const saveSkills = async (

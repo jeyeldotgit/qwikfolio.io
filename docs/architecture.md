@@ -95,7 +95,7 @@ Pure business logic, no React dependencies:
 - `portfolio/portfolio-fetch-helpers.ts` - Helper functions for fetching individual sections
 - `portfolio/portfolio-assemble.ts` - Portfolio assembly and validation logic
 - `portfolio/portfolio-mutations.ts` - Create/update/delete operations
-- `portfolio/forms/portfolio-form-actions.ts` - Section-specific save operations
+- `portfolio/portfolio-` - form-specific save operations
 
 **Profile:**
 
@@ -129,8 +129,7 @@ src/
 ├─ pages/ # Route-level page components
 ├─ services/ # Business logic services
 │ ├─ portfolio/ # Portfolio operations (modular structure)
-│ │ ├─ forms/ # Section-specific save operations
-│ │ └─ \*.ts # Fetch, mutations, assembly, errors
+│ │ └─ \*.ts # Fetch, mutations, assembly, errors, form-specific saves
 │ ├─ profile/ # Profile operations
 │ ├─ auth/ # Authentication
 │ ├─ analytics/ # Analytics tracking

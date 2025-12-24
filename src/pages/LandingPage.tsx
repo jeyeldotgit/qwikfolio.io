@@ -153,12 +153,21 @@ const LandingPage = () => {
                 presence instantly.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-lg">
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-6 text-lg"
+                  onClick={() => navigate("/auth")}
+                >
                   Get Started for Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button
                   variant="outline"
                   className="text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 px-8 py-6 text-lg"
+                  onClick={() => {
+                    const featuresSection = document.getElementById("features");
+                    if (featuresSection) {
+                      featuresSection.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
                 >
                   See How It Works
                 </Button>

@@ -257,6 +257,91 @@ CREATE POLICY "Users can delete their own education"
   USING (auth.uid() = user_id);
 
 -- ============================================
+-- PUBLIC READ POLICIES FOR PUBLISHED PORTFOLIOS
+-- ============================================
+-- These policies allow anonymous users to read published portfolios
+
+-- Allow public to view published portfolios
+CREATE POLICY "Public can view published portfolios"
+  ON portfolios FOR SELECT
+  USING (published = true);
+
+-- Allow public to view skills for published portfolios
+CREATE POLICY "Public can view skills for published portfolios"
+  ON skills FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM portfolios
+      WHERE portfolios.user_id = skills.user_id
+      AND portfolios.published = true
+    )
+  );
+
+-- Allow public to view projects for published portfolios
+CREATE POLICY "Public can view projects for published portfolios"
+  ON projects FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM portfolios
+      WHERE portfolios.user_id = projects.user_id
+      AND portfolios.published = true
+    )
+  );
+
+-- Allow public to view tech stack for published projects
+CREATE POLICY "Public can view tech stack for published projects"
+  ON project_tech_stack FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      JOIN portfolios ON portfolios.user_id = projects.user_id
+      WHERE projects.id = project_tech_stack.project_id
+      AND portfolios.published = true
+    )
+  );
+
+-- Allow public to view experience for published portfolios
+CREATE POLICY "Public can view experience for published portfolios"
+  ON experience FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM portfolios
+      WHERE portfolios.user_id = experience.user_id
+      AND portfolios.published = true
+    )
+  );
+
+-- Allow public to view education for published portfolios
+CREATE POLICY "Public can view education for published portfolios"
+  ON education FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM portfolios
+      WHERE portfolios.user_id = education.user_id
+      AND portfolios.published = true
+    )
+  );
+
+-- Enable RLS on profiles table (if not already enabled)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Allow public to view profiles by username (for portfolio lookup)
+-- This is needed for getPublicPortfolioByUsername to work
+CREATE POLICY "Public can view profiles by username"
+  ON profiles FOR SELECT
+  USING (true); -- Username is public information
+
+-- Users can still view and update their own profile
+CREATE POLICY "Users can view their own profile"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- ============================================
 -- TRIGGERS FOR UPDATED_AT
 -- ============================================
 -- Function to update updated_at timestamp

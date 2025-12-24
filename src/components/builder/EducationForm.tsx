@@ -126,6 +126,7 @@ export const EducationForm = ({
                     id={`edu-end-${index}`}
                     placeholder="2020-06"
                     value={edu.endDate ?? ""}
+                    disabled={edu.current}
                     onChange={(event) =>
                       handleEducationChange(index, {
                         ...edu,

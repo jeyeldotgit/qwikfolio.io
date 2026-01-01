@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
@@ -169,6 +170,7 @@ const DashboardPage = () => {
                 QwikFolio.io
               </span>
             </button>
+            <ThemeToggle />
             <ProfileMenu
               displayName={profile?.full_name ?? user?.email ?? null}
               onEditProfile={handleEditProfile}
@@ -201,6 +203,7 @@ const DashboardPage = () => {
           </button>
           <div className="flex items-center gap-4">
             <CompletionBadge status={effectiveStatus} />
+            <ThemeToggle />
             <ProfileMenu
               displayName={profile?.full_name ?? user?.email ?? null}
               onEditProfile={handleEditProfile}

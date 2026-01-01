@@ -2,10 +2,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Zap, FileText, Layout } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { usePortfolioPreview } from "@/hooks/usePortfolioPreview";
 import { PortfolioPreview } from "@/components/preview/PortfolioPreview";
 import { DevPortfolio } from "@/components/preview/DevPortfolio";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useProfile } from "@/hooks/useProfile";
 import { trackResumeDownload } from "@/services/analytics/analyticsService";
 
 type ViewMode = "portfolio" | "resume";
@@ -14,9 +16,12 @@ const DashboardPreviewPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuthSession();
+  const { profile } = useProfile();
   const { isLoading, portfolio } = usePortfolioPreview();
   const shouldPrint = searchParams.get("print") === "true";
   const [viewMode, setViewMode] = useState<ViewMode>("portfolio");
+
+  const avatarUrl = profile?.avatar_url ?? "";
 
   useEffect(() => {
     if (shouldPrint && portfolio && !isLoading) {
@@ -34,38 +39,38 @@ const DashboardPreviewPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="h-8 w-8 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="h-8 w-8 border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header - Hidden on print */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl print:hidden">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 print:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <button
             type="button"
             className="flex items-center gap-2 transition-opacity hover:opacity-80"
             onClick={() => navigate("/dashboard")}
           >
-            <Zap className="h-5 w-5 text-emerald-500" />
-            <span className="text-sm font-semibold text-white">
+            <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-500" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">
               QwikFolio.io
             </span>
           </button>
 
           <div className="flex items-center gap-2">
             {/* View Toggle */}
-            <div className="flex rounded-lg border border-slate-800 bg-slate-900 p-0.5">
+            <div className="flex rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-800">
               <button
                 type="button"
                 onClick={() => setViewMode("portfolio")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                   viewMode === "portfolio"
-                    ? "bg-emerald-500/10 text-emerald-400"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
                 <Layout className="h-3.5 w-3.5" />
@@ -76,8 +81,8 @@ const DashboardPreviewPage = () => {
                 onClick={() => setViewMode("resume")}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                   viewMode === "resume"
-                    ? "bg-emerald-500/10 text-emerald-400"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -85,11 +90,13 @@ const DashboardPreviewPage = () => {
               </button>
             </div>
 
+            <ThemeToggle />
+
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="border-slate-200 bg-transparent text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               onClick={() => navigate("/dashboard/builder")}
             >
               Edit
@@ -115,7 +122,9 @@ const DashboardPreviewPage = () => {
         {portfolio ? (
           <>
             {/* Web Portfolio View */}
-            {viewMode === "portfolio" && <DevPortfolio portfolio={portfolio} />}
+            {viewMode === "portfolio" && (
+              <DevPortfolio portfolio={portfolio} avatar={avatarUrl} />
+            )}
 
             {/* Resume View (also used for print) */}
             {viewMode === "resume" && (
@@ -133,7 +142,7 @@ const DashboardPreviewPage = () => {
           </>
         ) : (
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
               Your portfolio data is not ready yet. Go back to the builder, add
               your details, and try again.
             </div>

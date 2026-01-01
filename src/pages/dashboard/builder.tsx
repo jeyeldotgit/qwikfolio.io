@@ -2,6 +2,7 @@ import { usePortfolioBuilder } from "@/hooks/usePortfolioBuilder";
 import { Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { PersonalInfoForm } from "@/components/builder/PersonalInfoForm";
 import { SkillsForm } from "@/components/builder/SkillsForm";
 import { ProjectsForm } from "@/components/builder/ProjectsForm";
@@ -52,6 +53,7 @@ const DashboardBuilderPage = () => {
             </span>
           </button>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Button
               type="button"
               variant="outline"

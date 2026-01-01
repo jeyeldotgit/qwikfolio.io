@@ -14,6 +14,7 @@
 - [ ] ⚪ Design System Tokens in Tailwind
 - [ ] ⚪ Auth Flow UI
 - [x] 🟢 Portfolio Preview Refactor - DevPortfolio component
+- [x] 🟢 Light/Dark Theme System - Global theme toggle
 
 ## Version History
 
@@ -26,3 +27,10 @@
   - Project cards with number indicators
   - Timeline-based experience section
   - Portfolio/Resume view toggle on preview pages
+- v1.2: Added global light/dark theme system:
+  - Created `useTheme` hook with localStorage persistence
+  - Created `ThemeToggle` component (icon + dropdown variants)
+  - DevPortfolio now supports both light and dark themes
+  - Added theme toggle to all pages (Landing, Auth, Dashboard, Builder, Preview)
+  - Implemented FOUC prevention in index.html
+  - System preference detection with auto-follow option

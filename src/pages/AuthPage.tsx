@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AuthForm } from "@/components/AuthForm";
 import { Github, Mail, Zap, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -48,6 +49,7 @@ const AuthPage = () => {
               QwikFolio.io
             </span>
           </button>
+          <ThemeToggle />
           <Button
             variant="outline"
             className="text-xs sm:text-sm h-8"

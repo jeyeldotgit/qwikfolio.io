@@ -2,15 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/zap.svg"
-      style="display: none"
-    />
-
+    <link rel="icon" type="image/svg+xml" href="/zap.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QwikFolio.io</title>
+    <script>
+      // Prevent flash of unstyled content - detect theme before render
+      (function() {
+        const stored = localStorage.getItem('qwikfolio-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark) ? 'dark' : 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

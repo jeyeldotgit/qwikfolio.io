@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   ArrowRight,
   CheckCircle,
@@ -58,6 +59,7 @@ const LandingPage = () => {
               >
                 Contact
               </a>
+              <ThemeToggle className="mr-2" />
               <Button
                 variant="outline"
                 className="ml-2 text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 h-9"
@@ -115,6 +117,9 @@ const LandingPage = () => {
                 Contact
               </a>
               <div className="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-800 mt-2">
+                <div className="flex justify-center py-2">
+                  <ThemeToggle variant="dropdown" />
+                </div>
                 <Button
                   variant="outline"
                   className="w-full justify-center text-indigo-600 dark:text-indigo-400 border-indigo-600 dark:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800"

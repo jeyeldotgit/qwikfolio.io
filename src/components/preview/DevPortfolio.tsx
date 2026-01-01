@@ -46,8 +46,36 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
         <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="space-y-6">
-              {/* Name with gradient accent */}
-              <div className="space-y-2">
+              {/* Mobile Avatar - shown on smaller screens */}
+              <div className="flex items-center gap-4 lg:hidden">
+                <div className="relative h-20 w-20 shrink-0 sm:h-24 sm:w-24">
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 opacity-10 blur-lg dark:opacity-20" />
+                  <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80">
+                    <Avatar className="h-full w-full">
+                      <AvatarImage
+                        src={avatar}
+                        className="h-full w-full object-cover"
+                      />
+                      <AvatarFallback className="flex h-full w-full items-center justify-center text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {(personalInfo.name || "U")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-mono text-xs tracking-wider text-emerald-600 dark:text-emerald-400">
+                    {"<hello world />"}
+                  </p>
+                  <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                    <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-slate-200 dark:to-slate-400">
+                      {personalInfo.name || "Your Name"}
+                    </span>
+                  </h1>
+                </div>
+              </div>
+
+              {/* Desktop Name - hidden on mobile (shown in mobile avatar section) */}
+              <div className="hidden space-y-2 lg:block">
                 <p className="font-mono text-sm tracking-wider text-emerald-600 dark:text-emerald-400">
                   {"<hello world />"}
                 </p>
@@ -56,10 +84,12 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                     {personalInfo.name || "Your Name"}
                   </span>
                 </h1>
-                <p className="text-xl font-medium text-slate-600 dark:text-slate-300 sm:text-2xl">
-                  {personalInfo.headline || "Developer"}
-                </p>
               </div>
+
+              {/* Headline - always visible */}
+              <p className="text-xl font-medium text-slate-600 dark:text-slate-300 sm:text-2xl lg:mt-0 -mt-4">
+                {personalInfo.headline || "Developer"}
+              </p>
 
               {/* Bio */}
               {personalInfo.bio && (
@@ -101,7 +131,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
               </div>
             </div>
 
-            {/* Avatar/Decoration */}
+            {/* Avatar/Decoration - Desktop only */}
             <div className="hidden lg:block">
               <div className="relative h-48 w-48">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 opacity-10 blur-xl dark:opacity-20" />
@@ -112,11 +142,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       className="h-full w-full object-cover"
                     />
                     <AvatarFallback className="flex h-full w-full items-center justify-center text-6xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {avatar ? (
-                        <AvatarImage src={avatar} />
-                      ) : (
-                        (personalInfo.name || "U")[0]
-                      )}
+                      {(personalInfo.name || "U")[0]}
                     </AvatarFallback>
                   </Avatar>
                 </div>

@@ -103,7 +103,10 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
               </h2>
               <div className="mt-2 space-y-3">
                 {experience.map((exp) => (
-                  <div key={exp.id ?? `${exp.company}-${exp.role}`} className="space-y-1.5">
+                  <div
+                    key={exp.id ?? `${exp.company}-${exp.role}`}
+                    className="space-y-1.5"
+                  >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="text-sm font-semibold text-slate-900">
                         {exp.role}
@@ -113,7 +116,8 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
                       </p>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      {exp.startDate} – {exp.current ? "Present" : exp.endDate || "End date"}
+                      {exp.startDate} –{" "}
+                      {exp.current ? "Present" : exp.endDate || "End date"}
                     </p>
                     <p className="text-xs leading-relaxed text-slate-700">
                       {exp.description}
@@ -160,7 +164,8 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
                       {edu.degree} • {edu.field}
                     </p>
                     <p className="text-[11px] text-slate-500">
-                      {edu.startDate} – {edu.current ? "Present" : edu.endDate || "End date"}
+                      {edu.startDate} –{" "}
+                      {edu.current ? "Present" : edu.endDate || "End date"}
                     </p>
                     {edu.description ? (
                       <p className="text-[11px] leading-relaxed text-slate-700">
@@ -177,5 +182,3 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
     </div>
   );
 };
-
-

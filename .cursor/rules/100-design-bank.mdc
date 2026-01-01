@@ -1,0 +1,30 @@
+---
+description: Standards for UI/UX and Web Design Bank synchronization
+globs:
+  [
+    "src/components/**/*.tsx",
+    "src/pages/**/*.tsx",
+    "src/styles/**/*.css",
+    "design-bank/**/*",
+  ]
+alwaysApply: false
+---
+
+# 🎨 Design Bank Protocol
+
+## INITIALIZATION
+
+Before every design task, I MUST:
+
+1. Read `@design-bank/styleGuide.md` and `@design-bank/componentLibrary.md`.
+2. Check `@design-bank/progress.md` for current task status.
+
+## DESIGN PRINCIPLES
+
+- **Consistency:** Use Tailwind classes defined in the Style Guide.
+- **Accessibility:** Ensure WCAG AA compliance (contrast, ARIA labels).
+- **Refactoring:** Keep UI components modular as per `componentLibrary.md`.
+
+## UPDATE LOOP
+
+After any UI change, I MUST update `@design-bank/progress.md` to reflect the work done.

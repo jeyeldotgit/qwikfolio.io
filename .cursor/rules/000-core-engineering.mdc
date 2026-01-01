@@ -1,0 +1,26 @@
+---
+description: Standards for TypeScript, React, and Project Architecture
+globs: ["src/**/*.{ts,tsx}"]
+alwaysApply: true
+---
+
+# 🛠️ Engineering Core Rules
+
+## MENTAL MODEL
+
+- **Ship fast, but keep refactoring cheap.**
+- **TypeScript protects boundaries; React composes behavior.**
+
+## ARCHITECTURE
+
+- **Pages:** Layout, Composition, Props only. NO API/Logic.
+- **Hooks:** Own behavior, state transitions, and data fetching.
+- **Services:** Pure logic. No React, no state.
+- **Folder Structure:** `src/pages`, `src/components`, `src/hooks`, `src/services`, `src/schemas`, `src/types`, `src/lib`.
+
+## IMPLEMENTATION
+
+- **Files:** Max 200 lines if possible . Single responsibility.
+- **Components:** Arrow syntax only. NO `React.FC`. Props must be explicitly typed.
+- **TS:** NO `any`. Use unions over enums. Infer inside functions.
+- **Forms:** Zod schemas are the single source of truth.

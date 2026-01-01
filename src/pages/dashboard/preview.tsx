@@ -1,11 +1,14 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
-import { Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Zap, FileText, Layout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePortfolioPreview } from "@/hooks/usePortfolioPreview";
 import { PortfolioPreview } from "@/components/preview/PortfolioPreview";
+import { DevPortfolio } from "@/components/preview/DevPortfolio";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { trackResumeDownload } from "@/services/analytics/analyticsService";
+
+type ViewMode = "portfolio" | "resume";
 
 const DashboardPreviewPage = () => {
   const navigate = useNavigate();
@@ -13,18 +16,15 @@ const DashboardPreviewPage = () => {
   const { user } = useAuthSession();
   const { isLoading, portfolio } = usePortfolioPreview();
   const shouldPrint = searchParams.get("print") === "true";
+  const [viewMode, setViewMode] = useState<ViewMode>("portfolio");
 
   useEffect(() => {
     if (shouldPrint && portfolio && !isLoading) {
-      // Small delay to ensure content is fully rendered
       const timer = setTimeout(async () => {
-        // Track download before printing
         if (user?.id) {
           await trackResumeDownload(user.id);
         }
-
         window.print();
-        // Remove print param from URL after triggering print
         navigate("/dashboard/preview", { replace: true });
       }, 500);
 
@@ -34,34 +34,70 @@ const DashboardPreviewPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="h-8 w-8 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 ">
-      <header className="mb-4 border-b border-slate-200 bg-white/80 dark:bg-slate-900/80 dark:border-slate-800 backdrop-blur-md ">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <button type="button" className="flex items-center space-x-2">
-            <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-sm font-semibold text-slate-900 dark:text-white">
+    <div className="min-h-screen bg-slate-950">
+      {/* Header - Hidden on print */}
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl print:hidden">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <button
+            type="button"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            onClick={() => navigate("/dashboard")}
+          >
+            <Zap className="h-5 w-5 text-emerald-500" />
+            <span className="text-sm font-semibold text-white">
               QwikFolio.io
             </span>
           </button>
-          <div className="flex items-center gap-2 print:hidden">
+
+          <div className="flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex rounded-lg border border-slate-800 bg-slate-900 p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode("portfolio")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                  viewMode === "portfolio"
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Layout className="h-3.5 w-3.5" />
+                Portfolio
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("resume")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                  viewMode === "resume"
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Resume
+              </button>
+            </div>
+
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
               onClick={() => navigate("/dashboard/builder")}
             >
-              Edit portfolio
+              Edit
             </Button>
             <Button
               type="button"
               size="sm"
+              className="bg-emerald-600 text-white hover:bg-emerald-500"
               onClick={async () => {
                 if (user?.id) {
                   await trackResumeDownload(user.id);
@@ -69,19 +105,38 @@ const DashboardPreviewPage = () => {
                 window.print();
               }}
             >
-              Print / Save as PDF
+              Print / PDF
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <main>
         {portfolio ? (
-          <PortfolioPreview portfolio={portfolio} />
+          <>
+            {/* Web Portfolio View */}
+            {viewMode === "portfolio" && <DevPortfolio portfolio={portfolio} />}
+
+            {/* Resume View (also used for print) */}
+            {viewMode === "resume" && (
+              <div className="py-8 print:py-0">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 print:px-0">
+                  <PortfolioPreview portfolio={portfolio} />
+                </div>
+              </div>
+            )}
+
+            {/* Hidden print version - always renders resume layout */}
+            <div className="hidden print:block">
+              <PortfolioPreview portfolio={portfolio} />
+            </div>
+          </>
         ) : (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-            Your portfolio data is not ready yet. Go back to the builder, add
-            your details, and try again.
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              Your portfolio data is not ready yet. Go back to the builder, add
+              your details, and try again.
+            </div>
           </div>
         )}
       </main>

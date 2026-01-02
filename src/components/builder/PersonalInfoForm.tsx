@@ -3,7 +3,7 @@ import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 
 type PersonalInfoFormProps = {
   value: PersonalInfo;
@@ -98,10 +98,11 @@ export const PersonalInfoForm = ({
         <FormSection title="Bio">
           <div className="space-y-2">
             <Label htmlFor="bio">About You</Label>
-            <Textarea
+            <TextareaWithCounter
               id="bio"
-              placeholder="Tell us about yourself..."
+              placeholder="Tell us about yourself. Highlight your passion, expertise, and what makes you unique..."
               rows={4}
+              maxLength={500}
               value={value.bio ?? ""}
               onChange={(event) => handleFieldChange("bio", event.target.value)}
             />

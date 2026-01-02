@@ -3,7 +3,7 @@ import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 
 type EducationFormProps = {
@@ -103,7 +103,7 @@ export const EducationForm = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`edu-start-${index}`} required>
                     Start Date
@@ -135,36 +135,38 @@ export const EducationForm = ({
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`edu-current-${index}`}>
-                    Currently studying
-                  </Label>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <input
-                      id={`edu-current-${index}`}
-                      type="checkbox"
-                      className="h-3.5 w-3.5 rounded border border-slate-300 dark:border-slate-700"
-                      checked={edu.current}
-                      onChange={(event) =>
-                        handleEducationChange(index, {
-                          ...edu,
-                          current: event.target.checked,
-                          endDate: event.target.checked ? "" : edu.endDate,
-                        })
-                      }
-                    />
-                    <span>I&apos;m currently studying here</span>
-                  </div>
-                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  id={`edu-current-${index}`}
+                  type="checkbox"
+                  className="h-4 w-4 rounded border border-slate-300 text-emerald-600 focus:ring-emerald-500 dark:border-slate-700"
+                  checked={edu.current}
+                  onChange={(event) =>
+                    handleEducationChange(index, {
+                      ...edu,
+                      current: event.target.checked,
+                      endDate: event.target.checked ? "" : edu.endDate,
+                    })
+                  }
+                />
+                <Label
+                  htmlFor={`edu-current-${index}`}
+                  className="text-sm font-normal text-slate-600 dark:text-slate-400"
+                >
+                  I&apos;m currently studying here
+                </Label>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor={`edu-description-${index}`}>
                   Description (optional)
                 </Label>
-                <Textarea
+                <TextareaWithCounter
                   id={`edu-description-${index}`}
                   rows={3}
+                  maxLength={300}
                   placeholder="Any achievements, focus areas, or relevant details."
                   value={edu.description ?? ""}
                   onChange={(event) =>

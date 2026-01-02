@@ -3,7 +3,7 @@ import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 
 type ProjectsFormProps = {
@@ -107,9 +107,10 @@ export const ProjectsForm = ({
                 <Label htmlFor={`project-description-${index}`} required>
                   Description
                 </Label>
-                <Textarea
+                <TextareaWithCounter
                   id={`project-description-${index}`}
                   rows={3}
+                  maxLength={300}
                   placeholder="What did you build, and what impact did it have?"
                   value={project.description}
                   onChange={(event) =>

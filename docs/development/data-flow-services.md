@@ -225,6 +225,13 @@ services/portfolio/
 ├── portfolio-assemble.ts    # Data transformation
 ├── portfolio-errors.ts      # Error types
 └── portfolio-save.ts        # Form-specific saves
+
+services/analytics/
+├── analyticsService.ts      # All analytics operations
+├── getPortfolioStats         # Basic stats (views, downloads)
+├── getPortfolioTimeSeriesData # Chart data over time
+├── getRecentActivity         # Activity feed items
+└── trackPortfolioView        # Recording analytics
 ```
 
 ```typescript
@@ -233,6 +240,12 @@ export { getPortfolio, getPublicPortfolioByUsername } from "./portfolio-fetch";
 export { createPortfolio, updatePortfolio } from "./portfolio-mutations";
 export { assemblePortfolio } from "./portfolio-assemble";
 export { PortfolioError } from "./portfolio-errors";
+
+// analyticsService.ts
+export { getPortfolioStats } from "./analyticsService";
+export { getPortfolioTimeSeriesData } from "./analyticsService";
+export { getRecentActivity } from "./analyticsService";
+export { trackPortfolioView, trackResumeDownload } from "./analyticsService";
 ```
 
 ### Pattern 3: Query by Relationship
@@ -257,6 +270,62 @@ export const getPublicPortfolioByUsername = async (
 
   // Fetch the full portfolio
   return getPortfolio(profile.id);
+};
+```
+
+### Pattern 4: Time-Series Analytics Data
+
+```typescript
+// src/services/analytics/analyticsService.ts
+export const getPortfolioTimeSeriesData = async (
+  userId: string
+): Promise<ChartDataPoint[]> => {
+  // Get the date 30 days ago
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data, error } = await supabase
+    .from("portfolio_analytics")
+    .select("event_type, created_at")
+    .eq("user_id", userId)
+    .gte("created_at", thirtyDaysAgo.toISOString())
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  // Group by date and aggregate
+  const aggregated = data.reduce((acc, event) => {
+    const date = new Date(event.created_at).toLocaleDateString();
+    if (!acc[date]) acc[date] = { views: 0, downloads: 0 };
+    if (event.event_type === "view") acc[date].views++;
+    if (event.event_type === "download") acc[date].downloads++;
+    return acc;
+  }, {});
+
+  return Object.entries(aggregated).map(([date, counts]) => ({
+    date,
+    ...counts,
+  }));
+};
+
+export const getRecentActivity = async (
+  userId: string
+): Promise<Activity[]> => {
+  const { data, error } = await supabase
+    .from("portfolio_analytics")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error || !data) return [];
+
+  return data.map((event) => ({
+    id: event.id,
+    type: event.event_type,
+    timestamp: event.created_at,
+    metadata: event.metadata,
+  }));
 };
 ```
 

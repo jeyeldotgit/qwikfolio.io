@@ -132,16 +132,18 @@ Define data shape and validation. This is where truth lives.
 
 Encapsulate all stateful behavior:
 
-| Hook                  | Responsibility                         |
-| --------------------- | -------------------------------------- |
-| `useAuthSession`      | Global auth state (Context + Provider) |
-| `useAuthForm`         | Form state and validation              |
-| `useDashboard`        | Portfolio stats and status             |
-| `usePortfolioBuilder` | Portfolio editing                      |
-| `usePortfolioPreview` | Portfolio preview data                 |
-| `useProfile`          | User profile data                      |
-| `useToast`            | Toast notification system              |
-| `useTheme`            | Light/dark theme management            |
+| Hook                    | Responsibility                           |
+| ----------------------- | ---------------------------------------- |
+| `useAuthSession`        | Global auth state (Context + Provider)   |
+| `useAuthForm`           | Form state and validation                |
+| `useDashboard`          | Portfolio stats and status               |
+| `useDashboardAnalytics` | Time-series analytics data for dashboard |
+| `usePortfolioBuilder`   | Portfolio editing                        |
+| `usePortfolioPreview`   | Portfolio preview data                   |
+| `useProfile`            | User profile data                        |
+| `useToast`              | Toast notification system                |
+| `useTheme`              | Light/dark theme management              |
+| `useScrolled`           | Scroll state detection for sticky nav    |
 
 ### Pages (`src/pages/`)
 
@@ -160,14 +162,16 @@ Route-level composition **only**:
 
 **UI Components** (`ui/`): Reusable, style-focused
 
-- Button, Card, Dialog, Toast, Avatar, Input, etc.
+- Button, Card, Dialog, Toast, Avatar, Input, ThemeToggle, TextareaWithCounter, etc.
 
 **Domain Components**: Feature-specific
 
-- `builder/*` - Form sections
-- `dashboard/*` - Dashboard widgets
-- `preview/*` - Portfolio templates
-- `route/*` - Routing utilities
+- `builder/*` - Form sections (PersonalInfoForm, SkillsForm, ProjectsForm, ExperienceForm, EducationForm, BuilderProgress, BuilderHeader, MobileProgress)
+- `dashboard/*` - Dashboard widgets (StatCard, AnalyticsChart, RecentActivity, QuickActions, EmptyState, CompletionBadge)
+- `preview/*` - Portfolio templates (DevPortfolio, PortfolioPreview)
+- `landing/*` - Landing page sections (LandingNav, HeroSection, FeaturesSection, etc.)
+- `form/*` - Form utilities (FormCard, FormSection)
+- `route/*` - Routing utilities (ProtectedRoute)
 
 ### Services (`src/services/`)
 

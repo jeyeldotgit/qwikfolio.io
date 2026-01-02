@@ -576,6 +576,85 @@ export const useTheme = () => {
 };
 ```
 
+### Example 3: Dashboard Analytics Hook
+
+```typescript
+// src/hooks/useDashboardAnalytics.ts
+export const useDashboardAnalytics = () => {
+  const { user } = useAuthSession();
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAnalytics = async () => {
+      setState("loading");
+      try {
+        const [timeSeriesData, recentActivity] = await Promise.all([
+          getPortfolioTimeSeriesData(user.id),
+          getRecentActivity(user.id),
+        ]);
+
+        setChartData(timeSeriesData);
+        setActivities(recentActivity);
+        setState("success");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch");
+        setState("error");
+      }
+    };
+
+    fetchAnalytics();
+  }, [user]);
+
+  return {
+    chartData,
+    activities,
+    isLoading: state === "loading",
+    error,
+  };
+};
+```
+
+### Example 4: Scroll Detection Hook
+
+```typescript
+// src/hooks/useScrolled.ts
+export const useScrolled = (threshold: number = 10) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > threshold);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Check initial state
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [threshold]);
+
+  return isScrolled;
+};
+
+// Usage in LandingNav
+const LandingNav = () => {
+  const isScrolled = useScrolled();
+
+  return (
+    <nav className={cn(
+      "fixed top-0 w-full transition-all",
+      isScrolled ? "bg-white/95 shadow-sm" : "bg-transparent"
+    )}>
+      {/* ... */}
+    </nav>
+  );
+};
+```
+
 ---
 
 ## Testing Hooks
@@ -636,6 +715,22 @@ describe("useAuthForm", () => {
 | **Context Hook** | Global state needed by many components |
 | **Form Hook** | Managing form state and validation |
 | **Data Hook** | Fetching and caching server data |
+| **UI State Hook** | Managing UI behavior (scroll, resize, keyboard) |
+
+### QwikFolio Hook Reference
+
+| Hook | Purpose | Returns |
+|------|---------|---------|
+| `useAuthSession` | Auth state & user | `{ user, session, status, signOut }` |
+| `useAuthForm` | Auth form handling | `{ values, errors, handleChange, handleSubmit }` |
+| `useDashboard` | Dashboard data | `{ stats, portfolioExists, isLoading, refetch }` |
+| `useDashboardAnalytics` | Charts & activity | `{ chartData, activities, isLoading }` |
+| `usePortfolioBuilder` | Portfolio editing | `{ portfolio, errors, update*, handleSave }` |
+| `usePortfolioPreview` | Portfolio viewing | `{ portfolio, isLoading, error }` |
+| `useProfile` | User profile | `{ profile, isLoading, error }` |
+| `useTheme` | Theme management | `{ theme, resolvedTheme, setTheme, toggleTheme }` |
+| `useScrolled` | Scroll detection | `boolean` |
+| `useToast` | Toast notifications | `{ toast, toasts }` |
 
 ---
 

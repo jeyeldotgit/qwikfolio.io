@@ -62,14 +62,36 @@ export const FormField = ({ label, error, children }) => (
 **Organisms** (`src/components/dashboard/`):
 
 ```typescript
-// StatsCards.tsx - Complex, feature-specific
-export const StatsCards = ({ totalViews, resumeDownloads, status }) => (
-  <div className="grid grid-cols-3 gap-4">
-    <Card>
-      <CardTitle>Views</CardTitle>
-      <CardValue>{totalViews}</CardValue>
-    </Card>
-    {/* ... more cards */}
+// StatCard.tsx - Individual metric card with trend indicator
+export const StatCard = ({ label, value, icon, trend, trendLabel }) => (
+  <Card>
+    <div className="flex items-start justify-between">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
+        {icon}
+      </div>
+      {trend && <TrendBadge trend={trend} label={trendLabel} />}
+    </div>
+    <p className="text-2xl font-bold">{value}</p>
+    <p className="text-sm text-muted-foreground">{label}</p>
+  </Card>
+);
+
+// AnalyticsChart.tsx - Interactive area chart for time-series data
+export const AnalyticsChart = ({ data, isLoading }) => (
+  <ResponsiveContainer width="100%" height={300}>
+    <AreaChart data={data}>
+      <Area type="monotone" dataKey="views" fill="#10b981" />
+      <Area type="monotone" dataKey="downloads" fill="#06b6d4" />
+    </AreaChart>
+  </ResponsiveContainer>
+);
+
+// RecentActivity.tsx - Scrollable activity feed
+export const RecentActivity = ({ activities, isLoading }) => (
+  <div className="max-h-[320px] overflow-y-auto">
+    {activities.map((activity) => (
+      <ActivityItem key={activity.id} {...activity} />
+    ))}
   </div>
 );
 ```
@@ -77,14 +99,18 @@ export const StatsCards = ({ totalViews, resumeDownloads, status }) => (
 **Templates** (`src/pages/`):
 
 ```typescript
-// dashboard/index.tsx - Composes everything
+// dashboard/index.tsx - Composes everything with grid layout
 const DashboardPage = () => {
   const { stats } = useDashboard();
+  const { chartData, activities, isLoading } = useDashboardAnalytics();
+
   return (
-    <div>
-      <Header />
-      <StatsCards {...stats} />
-      <PortfolioActions />
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard label="Total Views" value={stats.totalViews} />
+      <StatCard label="Downloads" value={stats.resumeDownloads} />
+      <AnalyticsChart data={chartData} />
+      <RecentActivity activities={activities} />
+      <QuickActions />
     </div>
   );
 };

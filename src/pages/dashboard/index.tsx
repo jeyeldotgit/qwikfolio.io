@@ -150,7 +150,7 @@ const DashboardPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="h-8 w-8 border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 rounded-full animate-spin" />
       </div>
     );
   }
@@ -165,7 +165,7 @@ const DashboardPage = () => {
               className="flex items-center space-x-2"
               onClick={() => navigate("/")}
             >
-              <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <Zap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               <span className="text-lg font-semibold text-slate-900 dark:text-white">
                 QwikFolio.io
               </span>
@@ -196,7 +196,7 @@ const DashboardPage = () => {
             className="flex items-center space-x-2"
             onClick={() => navigate("/")}
           >
-            <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <Zap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             <span className="text-lg font-semibold text-slate-900 dark:text-white">
               QwikFolio.io
             </span>
@@ -273,7 +273,7 @@ const DashboardPage = () => {
                   description: "Portfolio URL has been copied to clipboard.",
                 });
               }}
-              className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               Copy URL
             </button>

@@ -131,10 +131,10 @@ export const ProjectsForm = ({
                         key={tech}
                         type="button"
                         onClick={() => handleRemoveTechStack(index, tech)}
-                        className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/50"
+                        className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
                       >
                         <span>{tech}</span>
-                        <span className="ml-1.5 text-indigo-600 dark:text-indigo-300">
+                        <span className="ml-1.5 text-emerald-600 dark:text-emerald-300">
                           ×
                         </span>
                       </button>
@@ -151,7 +151,7 @@ export const ProjectsForm = ({
                             event.target.value = "";
                           }
                         }}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
                       >
                         <option value="">Select a technology...</option>
                         {TECH_STACK_OPTIONS.filter(

@@ -24,7 +24,7 @@ export const StatsCards = ({
               {totalViews}
             </p>
           </div>
-          <Eye className="h-5 w-5 text-indigo-500" />
+          <Eye className="h-5 w-5 text-emerald-500" />
         </CardContent>
       </Card>
 
@@ -38,7 +38,7 @@ export const StatsCards = ({
               {resumeDownloads}
             </p>
           </div>
-          <FileDown className="h-5 w-5 text-indigo-500" />
+          <FileDown className="h-5 w-5 text-cyan-500" />
         </CardContent>
       </Card>
 

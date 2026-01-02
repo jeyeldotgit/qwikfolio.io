@@ -29,7 +29,7 @@ const DashboardBuilderPage = () => {
   if (isLoading && !portfolio) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="h-8 w-8 border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 rounded-full animate-spin" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ const DashboardBuilderPage = () => {
             className="flex items-center space-x-2"
             onClick={() => navigate("/")}
           >
-            <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <Zap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             <span className="text-lg font-semibold text-slate-900 dark:text-white">
               QwikFolio.io
             </span>
@@ -64,7 +64,7 @@ const DashboardBuilderPage = () => {
             </Button>
             <Button
               type="button"
-              className="h-9 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="h-9 text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

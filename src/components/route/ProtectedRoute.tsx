@@ -21,7 +21,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+        <div className="h-8 w-8 border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 rounded-full animate-spin" />
       </div>
     );
   }
@@ -41,7 +41,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       // Show loading state briefly to prevent navigation flicker
       return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-          <div className="h-8 w-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+          <div className="h-8 w-8 border-2 border-slate-300 border-t-emerald-500 dark:border-slate-700 rounded-full animate-spin" />
         </div>
       );
     }

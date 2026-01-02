@@ -104,7 +104,7 @@ export const AuthForm = ({
             id="email"
             type="email"
             autoComplete="email"
-            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
             placeholder="you@example.com"
             value={values.email}
             onChange={(event) => handleChange("email", event.target.value)}
@@ -129,7 +129,7 @@ export const AuthForm = ({
             autoComplete={
               mode === "signUp" ? "new-password" : "current-password"
             }
-            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
             placeholder="••••••••"
             value={values.password}
             onChange={(event) => handleChange("password", event.target.value)}
@@ -153,7 +153,7 @@ export const AuthForm = ({
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
               placeholder="••••••••"
               value={"confirmPassword" in values ? values.confirmPassword : ""}
               onChange={(event) =>
@@ -172,7 +172,7 @@ export const AuthForm = ({
           <div className="flex items-center justify-between text-xs">
             <button
               type="button"
-              className="text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               Forgot password?
             </button>
@@ -181,7 +181,7 @@ export const AuthForm = ({
 
         <Button
           type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm h-10"
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm h-10"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Submitting..." : submitLabel}
@@ -195,8 +195,8 @@ export const AuthForm = ({
       >
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-              <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+              <Mail className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <DialogTitle className="text-lg">Check your email</DialogTitle>
           </div>
@@ -210,24 +210,24 @@ export const AuthForm = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 space-y-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3">
+        <div className="mt-4 space-y-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3">
           <div className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs text-emerald-900 dark:text-emerald-200">
               <span className="font-medium">Step 1:</span> Check your email
               inbox (and spam folder if needed)
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs text-emerald-900 dark:text-emerald-200">
               <span className="font-medium">Step 2:</span> Click the
               confirmation link in the email
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-            <p className="text-xs text-indigo-900 dark:text-indigo-200">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs text-emerald-900 dark:text-emerald-200">
               <span className="font-medium">Step 3:</span> Return here and sign
               in with your credentials
             </p>

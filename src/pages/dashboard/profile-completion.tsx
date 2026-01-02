@@ -208,7 +208,7 @@ const ProfileCompletionPage = () => {
             <input
               id="fullName"
               type="text"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
               placeholder="Alex Developer"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
@@ -222,7 +222,7 @@ const ProfileCompletionPage = () => {
             <input
               id="username"
               type="text"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
               placeholder="alex_developer"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
@@ -235,7 +235,7 @@ const ProfileCompletionPage = () => {
 
           <Button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm h-10"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm h-10"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Saving..." : "Continue to dashboard"}

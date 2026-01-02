@@ -17,7 +17,7 @@ export const EmptyState = ({ onCreatePortfolio }: EmptyStateProps) => {
 
       <div className="mt-8">
         <Button
-          className="px-6 h-10 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="px-6 h-10 text-sm bg-emerald-600 hover:bg-emerald-500 text-white"
           onClick={onCreatePortfolio}
         >
           Create Your Portfolio

@@ -44,7 +44,7 @@ const AuthPage = () => {
             className="flex items-center space-x-2"
             onClick={handleGoHome}
           >
-            <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <Zap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             <span className="text-lg font-semibold text-slate-900 dark:text-white">
               QwikFolio.io
             </span>
@@ -63,13 +63,13 @@ const AuthPage = () => {
       <main className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-5xl grid gap-10 lg:grid-cols-[1.1fr_1fr] items-center">
           <div className="space-y-4 max-w-xl">
-            <p className="inline-flex items-center text-xs font-medium tracking-wide uppercase text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full">
+            <p className="inline-flex items-center text-xs font-medium tracking-wide uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full">
               Build once. Ship your career.
             </p>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">
               {mode === "signIn" ? "Sign in" : "Create an account"} to start
               your{" "}
-              <span className="text-indigo-600 dark:text-indigo-400">
+              <span className="text-emerald-600 dark:text-emerald-400">
                 QwikFolio
               </span>
             </h1>
@@ -161,7 +161,7 @@ const AuthPage = () => {
                     : "Already have an account? "}
                   <button
                     type="button"
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
                     onClick={() =>
                       setMode(mode === "signIn" ? "signUp" : "signIn")
                     }

@@ -25,7 +25,7 @@ export const PortfolioActions = ({
       </p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button
-          className="flex-1 justify-center h-10 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+          className="flex-1 justify-center h-10 text-sm bg-emerald-600 hover:bg-emerald-500 text-white"
           onClick={onViewPortfolio}
         >
           View Portfolio

@@ -22,7 +22,9 @@ const SECTIONS: Section[] = [
     label: "Personal Info",
     icon: User,
     isComplete: (p) =>
-      Boolean(p.personalInfo.name && p.personalInfo.headline && p.personalInfo.email),
+      Boolean(
+        p.personalInfo.name && p.personalInfo.headline && p.personalInfo.email
+      ),
   },
   {
     id: "skills",
@@ -52,7 +54,7 @@ const SECTIONS: Section[] = [
     icon: GraduationCap,
     isComplete: (p) =>
       (p.education?.length ?? 0) > 0 &&
-      (p.education ?? []).every((edu) => edu.institution && edu.degree),
+      (p.education ?? []).every((edu) => edu.school && edu.degree && edu.field),
   },
 ];
 
@@ -70,7 +72,9 @@ export const BuilderProgress = ({
   className,
 }: BuilderProgressProps) => {
   const completedCount = SECTIONS.filter((s) => s.isComplete(portfolio)).length;
-  const progressPercentage = Math.round((completedCount / SECTIONS.length) * 100);
+  const progressPercentage = Math.round(
+    (completedCount / SECTIONS.length) * 100
+  );
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -117,8 +121,8 @@ export const BuilderProgress = ({
                   isComplete
                     ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
                     : isActive
-                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                 )}
               >
                 {isComplete ? (
@@ -168,4 +172,3 @@ export const BuilderProgress = ({
 };
 
 export { SECTIONS };
-

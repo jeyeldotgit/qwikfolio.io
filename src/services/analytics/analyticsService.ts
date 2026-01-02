@@ -63,6 +63,118 @@ export const trackResumeDownload = async (userId: string): Promise<void> => {
   }
 };
 
+export type AnalyticsDataPoint = {
+  date: string;
+  views: number;
+  downloads: number;
+};
+
+export type RecentActivityItem = {
+  id: string;
+  type: "view" | "download";
+  timestamp: string;
+};
+
+export const getAnalyticsTimeSeries = async (
+  userId: string,
+  days: number = 7
+): Promise<AnalyticsDataPoint[]> => {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("portfolio_analytics")
+      .select("event_type, created_at")
+      .eq("user_id", userId)
+      .gte("created_at", startDate.toISOString())
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch time series:", error);
+      return generateEmptyTimeSeries(days);
+    }
+
+    // Group by date
+    const dateMap = new Map<string, { views: number; downloads: number }>();
+
+    // Initialize all dates with zeros
+    for (let i = 0; i <= days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - (days - i));
+      const dateKey = date.toISOString().split("T")[0];
+      dateMap.set(dateKey, { views: 0, downloads: 0 });
+    }
+
+    // Aggregate events by date
+    data?.forEach((event) => {
+      const dateKey = event.created_at.split("T")[0];
+      const existing = dateMap.get(dateKey) || { views: 0, downloads: 0 };
+      if (event.event_type === "view") {
+        existing.views += 1;
+      } else if (event.event_type === "download") {
+        existing.downloads += 1;
+      }
+      dateMap.set(dateKey, existing);
+    });
+
+    // Convert to array
+    return Array.from(dateMap.entries()).map(([date, counts]) => ({
+      date,
+      views: counts.views,
+      downloads: counts.downloads,
+    }));
+  } catch (error) {
+    console.error("Error fetching analytics time series:", error);
+    return generateEmptyTimeSeries(days);
+  }
+};
+
+const generateEmptyTimeSeries = (days: number): AnalyticsDataPoint[] => {
+  const result: AnalyticsDataPoint[] = [];
+  for (let i = 0; i <= days; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - (days - i));
+    result.push({
+      date: date.toISOString().split("T")[0],
+      views: 0,
+      downloads: 0,
+    });
+  }
+  return result;
+};
+
+export const getRecentActivity = async (
+  userId: string,
+  limit: number = 10
+): Promise<RecentActivityItem[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("portfolio_analytics")
+      .select("id, event_type, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Failed to fetch recent activity:", error);
+      return [];
+    }
+
+    return (
+      data?.map((event) => ({
+        id: event.id,
+        type: event.event_type as "view" | "download",
+        timestamp: event.created_at,
+      })) || []
+    );
+  } catch (error) {
+    console.error("Error fetching recent activity:", error);
+    return [];
+  }
+};
+
 export const getPortfolioStats = async (
   userId: string
 ): Promise<{

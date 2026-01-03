@@ -12,11 +12,13 @@ export const signUpWithEmail = async (
   | { user: User | null; session: Session | null }
   | { error: string; user: null; session: null }
 > => {
+  const redirectUrl = `${window.location.origin}/onboarding`;
+
   const { data, error } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
     options: {
-      emailRedirectTo: `${import.meta.env.VITE_APP_URL}/onboarding`,
+      emailRedirectTo: redirectUrl,
     },
   });
 

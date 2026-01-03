@@ -30,17 +30,20 @@ export const HeroSection = () => {
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight">
-            <span className="text-slate-900 dark:text-white">Your Career,</span>
+            <span className="text-slate-900 dark:text-white">
+              Your Online Presence,
+            </span>
             <br />
             <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-cyan-500 bg-clip-text text-transparent">
-              One Page Away
+              Shipped in Minutes
             </span>
           </h1>
 
           {/* Subheadline */}
           <p className="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Stop wrestling with design tools. Fill out simple forms, and we'll
-            generate a stunning portfolio and print-ready resume instantly.
+            The fastest path from "Incomplete" to "Hired." Turn your experience
+            into a beautiful, live portfolio without touching a single layout
+            tool.
           </p>
 
           {/* CTAs */}

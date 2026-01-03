@@ -48,7 +48,10 @@ export const LandingNav = () => {
               <Zap className="relative h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             </div>
             <span className="text-xl font-bold text-slate-900 dark:text-white">
-              Qwik<span className="text-emerald-600 dark:text-emerald-400">Folio</span>
+              Qwik
+              <span className="text-emerald-600 dark:text-emerald-400">
+                Folio
+              </span>
             </span>
           </button>
 
@@ -95,7 +98,11 @@ export const LandingNav = () => {
               className="p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
@@ -137,4 +144,3 @@ export const LandingNav = () => {
     </nav>
   );
 };
-

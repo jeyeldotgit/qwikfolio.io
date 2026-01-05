@@ -1,4 +1,5 @@
 import supabase from "@/lib/supabase";
+import type { Provider as OAuthProvider } from "@supabase/supabase-js";
 import type { Session, User } from "@supabase/supabase-js";
 
 type EmailAuthPayload = {
@@ -131,14 +132,16 @@ export const subscribeToAuthChanges = (
 };
 
 // Email Authentication
-export const authenticateWithOAuth = async (): Promise<
+export const authenticateWithOAuth = async (
+  provider: OAuthProvider
+): Promise<
   | { success: boolean; message: string }
   | { error: string; success: false; message: string }
 > => {
   const redirectUrl = `${window.location.origin}/onboarding`;
 
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider: provider,
     options: {
       redirectTo: redirectUrl,
       queryParams: { prompt: "select_account" },

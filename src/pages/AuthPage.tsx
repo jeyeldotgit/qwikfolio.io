@@ -2,33 +2,55 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AuthForm } from "@/components/AuthForm";
-import { Github, Mail, Zap, AlertCircle } from "lucide-react";
+import { Github, Mail, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "@/services/profile/profileService";
 import { authenticateWithOAuth } from "@/services/auth/supabase-auth";
 import { useToast } from "@/hooks/useToast";
-import {
-  Dialog,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
-  const [isSocialAuthModalOpen, setIsSocialAuthModalOpen] = useState(false);
-  const [socialAuthProvider, setSocialAuthProvider] = useState<
-    "Google" | "GitHub" | null
-  >(null);
+
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
+
+  const handleGithubSignIn = async () => {
+    setIsGithubLoading(true);
+
+    try {
+      const result = await authenticateWithOAuth("github");
+
+      if ("error" in result) {
+        toast({
+          variant: "destructive",
+          title: "Authentication failed",
+          description:
+            result.error ||
+            "Failed to initiate GitHub sign-in. Please try again.",
+        });
+        setIsGithubLoading(false);
+      } else {
+        // OAuth redirect will happen automatically
+        // The user will be redirected to GitHub, then back to /onboarding
+        // No need to set loading to false as the page will redirect
+      }
+    } catch (error) {
+      console.error("GitHub sign-in error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+      setIsGithubLoading(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const result = await authenticateWithOAuth();
+      const result = await authenticateWithOAuth("google");
 
       if ("error" in result) {
         toast({
@@ -53,11 +75,6 @@ const AuthPage = () => {
       });
       setIsGoogleLoading(false);
     }
-  };
-
-  const handleGithubSignIn = () => {
-    setSocialAuthProvider("GitHub");
-    setIsSocialAuthModalOpen(true);
   };
 
   const handleGoHome = () => {
@@ -149,9 +166,19 @@ const AuthPage = () => {
                   variant="outline"
                   className="w-full justify-center h-9 text-xs sm:text-sm"
                   onClick={handleGithubSignIn}
+                  disabled={isGithubLoading}
                 >
-                  <Github className="mr-2 h-4 w-4" />
-                  Continue with GitHub
+                  {isGithubLoading ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600 dark:border-slate-600 dark:border-t-slate-300" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Github className="mr-2 h-4 w-4" />
+                      Continue with GitHub
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -233,76 +260,6 @@ const AuthPage = () => {
           </div>
         </div>
       </main>
-
-      {/* Social Auth Not Available Modal */}
-      <Dialog
-        open={isSocialAuthModalOpen}
-        onOpenChange={setIsSocialAuthModalOpen}
-      >
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <DialogTitle className="text-lg">
-              {socialAuthProvider} sign-in coming soon
-            </DialogTitle>
-          </div>
-          <DialogDescription className="text-sm leading-relaxed">
-            {socialAuthProvider} authentication is not yet available. We're
-            working on adding this feature to make signing in even easier.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="mt-4 space-y-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
-          <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
-            In the meantime, you can:
-          </p>
-          <div className="space-y-1.5">
-            <div className="flex items-start gap-2">
-              <span className="text-xs text-amber-800 dark:text-amber-300">
-                •
-              </span>
-              <p className="text-xs text-amber-800 dark:text-amber-300">
-                Sign in or sign up using your email and password
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-xs text-amber-800 dark:text-amber-300">
-                •
-              </span>
-              <p className="text-xs text-amber-800 dark:text-amber-300">
-                Check back soon for {socialAuthProvider} authentication support
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSocialAuthModalOpen(false)}
-          >
-            Got it
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => {
-              setIsSocialAuthModalOpen(false);
-              // Focus on email form or switch to email sign-in
-              const emailInput = document.getElementById("email");
-              if (emailInput) {
-                emailInput.focus();
-              }
-            }}
-          >
-            Use email instead
-          </Button>
-        </DialogFooter>
-      </Dialog>
     </div>
   );
 };

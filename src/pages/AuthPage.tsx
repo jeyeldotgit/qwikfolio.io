@@ -5,6 +5,8 @@ import { AuthForm } from "@/components/AuthForm";
 import { Github, Mail, Zap, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "@/services/profile/profileService";
+import { authenticateWithOAuth } from "@/services/auth/supabase-auth";
+import { useToast } from "@/hooks/useToast";
 import {
   Dialog,
   DialogHeader,
@@ -15,15 +17,42 @@ import {
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
   const [isSocialAuthModalOpen, setIsSocialAuthModalOpen] = useState(false);
   const [socialAuthProvider, setSocialAuthProvider] = useState<
     "Google" | "GitHub" | null
   >(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const handleGoogleSignIn = () => {
-    setSocialAuthProvider("Google");
-    setIsSocialAuthModalOpen(true);
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const result = await authenticateWithOAuth();
+
+      if ("error" in result) {
+        toast({
+          variant: "destructive",
+          title: "Authentication failed",
+          description:
+            result.error ||
+            "Failed to initiate Google sign-in. Please try again.",
+        });
+        setIsGoogleLoading(false);
+      } else {
+        // OAuth redirect will happen automatically
+        // The user will be redirected to Google, then back to /onboarding
+        // No need to set loading to false as the page will redirect
+      }
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+      setIsGoogleLoading(false);
+    }
   };
 
   const handleGithubSignIn = () => {
@@ -101,9 +130,19 @@ const AuthPage = () => {
                   variant="outline"
                   className="w-full justify-center h-9 text-xs sm:text-sm"
                   onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
                 >
-                  <Mail className="mr-2 h-4 w-4 text-red-500" />
-                  Continue with Google
+                  {isGoogleLoading ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600 dark:border-slate-600 dark:border-t-slate-300" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4 text-red-500" />
+                      Continue with Google
+                    </>
+                  )}
                 </Button>
                 <Button
                   type="button"

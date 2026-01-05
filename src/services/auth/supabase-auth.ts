@@ -129,3 +129,33 @@ export const subscribeToAuthChanges = (
     data.subscription.unsubscribe();
   };
 };
+
+// Email Authentication
+export const authenticateWithOAuth = async (): Promise<
+  | { success: boolean; message: string }
+  | { error: string; success: false; message: string }
+> => {
+  const redirectUrl = `${window.location.origin}/onboarding`;
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: { prompt: "select_account" },
+    },
+  });
+
+  if (error) {
+    console.error(error);
+    return {
+      error: error.message,
+      success: false,
+      message: "Error initiating authentication",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Authentication initiated",
+  };
+};

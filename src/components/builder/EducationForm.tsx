@@ -5,16 +5,19 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type EducationFormProps = {
   value: Education[];
   onChange: (value: Education[]) => void;
+  errors?: Record<number, Record<string, string>>;
   className?: string;
 };
 
 export const EducationForm = ({
   value,
   onChange,
+  errors = {},
   className,
 }: EducationFormProps) => {
   const handleEducationChange = (index: number, updated: Education) => {
@@ -66,7 +69,13 @@ export const EducationForm = ({
                         school: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.school && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.school && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].school}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`edu-degree-${index}`} required>
@@ -82,7 +91,13 @@ export const EducationForm = ({
                         degree: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.degree && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.degree && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].degree}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -100,7 +115,13 @@ export const EducationForm = ({
                       field: event.target.value,
                     })
                   }
+                  className={cn(errors[index]?.field && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                 />
+                {errors[index]?.field && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {errors[index].field}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -118,7 +139,13 @@ export const EducationForm = ({
                         startDate: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.startDate && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.startDate && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].startDate}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`edu-end-${index}`}>End Date</Label>

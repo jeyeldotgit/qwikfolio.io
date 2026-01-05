@@ -4,16 +4,19 @@ import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
+import { cn } from "@/lib/utils";
 
 type PersonalInfoFormProps = {
   value: PersonalInfo;
   onChange: (value: PersonalInfo) => void;
+  errors?: Record<string, string>;
   className?: string;
 };
 
 export const PersonalInfoForm = ({
   value,
   onChange,
+  errors = {},
   className,
 }: PersonalInfoFormProps) => {
   const handleFieldChange = <K extends keyof PersonalInfo>(
@@ -46,7 +49,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("name", event.target.value)
                 }
+                className={cn(errors.name && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.name && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.name}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="headline" required>
@@ -59,7 +68,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("headline", event.target.value)
                 }
+                className={cn(errors.headline && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.headline && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.headline}
+                </p>
+              )}
             </div>
           </div>
         </FormSection>
@@ -78,7 +93,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("email", event.target.value)
                 }
+                className={cn(errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.email && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.email}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone (optional)</Label>
@@ -121,7 +142,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("website", event.target.value)
                 }
+                className={cn(errors.website && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.website && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.website}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="github">GitHub (optional)</Label>
@@ -133,7 +160,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("github", event.target.value)
                 }
+                className={cn(errors.github && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.github && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.github}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="linkedin">LinkedIn (optional)</Label>
@@ -145,7 +178,13 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange("linkedin", event.target.value)
                 }
+                className={cn(errors.linkedin && "border-red-500 focus:border-red-500 focus:ring-red-500")}
               />
+              {errors.linkedin && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.linkedin}
+                </p>
+              )}
             </div>
           </div>
         </FormSection>

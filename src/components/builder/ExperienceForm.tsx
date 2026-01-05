@@ -5,16 +5,19 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type ExperienceFormProps = {
   value: Experience[];
   onChange: (value: Experience[]) => void;
+  errors?: Record<number, Record<string, string>>;
   className?: string;
 };
 
 export const ExperienceForm = ({
   value,
   onChange,
+  errors = {},
   className,
 }: ExperienceFormProps) => {
   const handleExperienceChange = (index: number, updated: Experience) => {
@@ -65,7 +68,13 @@ export const ExperienceForm = ({
                         company: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.company && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.company && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].company}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`exp-role-${index}`} required>
@@ -81,7 +90,13 @@ export const ExperienceForm = ({
                         role: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.role && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.role && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].role}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -100,7 +115,13 @@ export const ExperienceForm = ({
                         startDate: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.startDate && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.startDate && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].startDate}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`exp-end-${index}`}>End Date</Label>
@@ -157,7 +178,13 @@ export const ExperienceForm = ({
                       description: event.target.value,
                     })
                   }
+                  className={cn(errors[index]?.description && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                 />
+                {errors[index]?.description && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {errors[index].description}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end">

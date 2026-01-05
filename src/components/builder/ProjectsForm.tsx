@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Project } from "@/schemas/portfolio";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
@@ -5,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type ProjectsFormProps = {
   value: Project[];
   onChange: (value: Project[]) => void;
+  errors?: Record<number, Record<string, string>>;
   className?: string;
 };
 
@@ -35,14 +38,31 @@ const TECH_STACK_OPTIONS = [
 export const ProjectsForm = ({
   value,
   onChange,
+  errors = {},
   className,
 }: ProjectsFormProps) => {
+  // Track custom tech input for each project
+  const [customTechInputs, setCustomTechInputs] = useState<Record<number, string>>({});
+  // Track which projects have "Other" selected
+  const [showCustomInput, setShowCustomInput] = useState<Record<number, boolean>>({});
+
   const handleProjectChange = (index: number, updated: Project) => {
     onChange(value.map((project, idx) => (idx === index ? updated : project)));
   };
 
   const handleRemoveProject = (index: number) => {
     onChange(value.filter((_, idx) => idx !== index));
+    // Clean up state for removed project
+    setCustomTechInputs((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
+    setShowCustomInput((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
   };
 
   const handleAddProject = () => {
@@ -77,6 +97,46 @@ export const ProjectsForm = ({
     });
   };
 
+  const handleTechSelect = (index: number, selectedTech: string) => {
+    if (selectedTech === "Other") {
+      // Show custom input for this project
+      setShowCustomInput((prev) => ({ ...prev, [index]: true }));
+    } else if (selectedTech) {
+      // Add the selected tech directly
+      handleAddTechStack(index, selectedTech);
+    }
+  };
+
+  const handleCustomTechSubmit = (index: number) => {
+    const customTech = customTechInputs[index]?.trim();
+    if (customTech && customTech.length >= 2) {
+      const project = value[index];
+      if (!project.techStack.includes(customTech)) {
+        handleAddTechStack(index, customTech);
+        // Clear input and hide custom input
+        setCustomTechInputs((prev) => ({ ...prev, [index]: "" }));
+        setShowCustomInput((prev) => ({ ...prev, [index]: false }));
+      }
+    }
+  };
+
+  const handleCustomTechCancel = (index: number) => {
+    setCustomTechInputs((prev) => ({ ...prev, [index]: "" }));
+    setShowCustomInput((prev) => ({ ...prev, [index]: false }));
+  };
+
+  const handleCustomTechKeyDown = (
+    index: number,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleCustomTechSubmit(index);
+    } else if (event.key === "Escape") {
+      handleCustomTechCancel(index);
+    }
+  };
+
   return (
     <FormCard
       title="Projects"
@@ -101,7 +161,13 @@ export const ProjectsForm = ({
                       name: event.target.value,
                     })
                   }
+                  className={cn(errors[index]?.name && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                 />
+                {errors[index]?.name && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {errors[index].name}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`project-description-${index}`} required>
@@ -119,36 +185,87 @@ export const ProjectsForm = ({
                       description: event.target.value,
                     })
                   }
+                  className={cn(errors[index]?.description && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                 />
+                {errors[index]?.description && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {errors[index].description}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`project-tech-${index}`} required>
                   Tech Stack
                 </Label>
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    {project.techStack.map((tech) => (
-                      <button
-                        key={tech}
-                        type="button"
-                        onClick={() => handleRemoveTechStack(index, tech)}
-                        className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-                      >
-                        <span>{tech}</span>
-                        <span className="ml-1.5 text-emerald-600 dark:text-emerald-300">
-                          ×
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+                  <div className="space-y-3">
+                    {errors[index]?.techStack && (
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        {errors[index].techStack}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {project.techStack.map((tech) => (
+                        <button
+                          key={tech}
+                          type="button"
+                          onClick={() => handleRemoveTechStack(index, tech)}
+                          className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+                        >
+                          <span>{tech}</span>
+                          <span className="ml-1.5 text-emerald-600 dark:text-emerald-300">
+                            ×
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  {showCustomInput[index] ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+                        <div className="space-y-2">
+                          <Input
+                            id={`project-custom-tech-${index}`}
+                            placeholder="Enter custom technology..."
+                            value={customTechInputs[index] || ""}
+                            onChange={(event) =>
+                              setCustomTechInputs((prev) => ({
+                                ...prev,
+                                [index]: event.target.value,
+                              }))
+                            }
+                            onKeyDown={(e) => handleCustomTechKeyDown(index, e)}
+                            autoFocus
+                            className="text-sm"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => handleCustomTechSubmit(index)}
+                          disabled={!customTechInputs[index]?.trim() || customTechInputs[index]?.trim().length < 2}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCustomTechCancel(index)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Press Enter to add, Esc to cancel
+                      </p>
+                    </div>
+                  ) : (
                     <div className="space-y-2">
                       <select
                         id={`project-tech-${index}`}
                         value=""
                         onChange={(event) => {
                           if (event.target.value) {
-                            handleAddTechStack(index, event.target.value);
+                            handleTechSelect(index, event.target.value);
                             event.target.value = "";
                           }
                         }}
@@ -164,7 +281,7 @@ export const ProjectsForm = ({
                         ))}
                       </select>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +300,13 @@ export const ProjectsForm = ({
                         repoUrl: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.repoUrl && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.repoUrl && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].repoUrl}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`project-live-${index}`}>
@@ -200,7 +323,13 @@ export const ProjectsForm = ({
                         liveUrl: event.target.value,
                       })
                     }
+                    className={cn(errors[index]?.liveUrl && "border-red-500 focus:border-red-500 focus:ring-red-500")}
                   />
+                  {errors[index]?.liveUrl && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].liveUrl}
+                    </p>
+                  )}
                 </div>
               </div>
 

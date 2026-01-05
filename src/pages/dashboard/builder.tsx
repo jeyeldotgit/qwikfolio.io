@@ -57,8 +57,33 @@ const DashboardBuilderPage = () => {
 
     setSaveStatus("saving");
     await handleSave();
-    setSaveStatus("saved");
-    hasUnsavedChanges.current = false;
+
+    // If there are validation errors, scroll to the first error
+    if (errors.fieldErrors && errors.fieldErrors.length > 0) {
+      const firstError = errors.fieldErrors[0];
+      const [section] = firstError.path;
+
+      // Map section names to refs
+      const sectionMap: Record<string, keyof typeof sectionRefs> = {
+        personalInfo: "personal",
+        skills: "skills",
+        projects: "projects",
+        experience: "experience",
+        education: "education",
+      };
+
+      const sectionKey = sectionMap[section as string];
+      if (sectionKey && sectionRefs[sectionKey]?.current) {
+        sectionRefs[sectionKey].current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        setActiveSection(sectionKey);
+      }
+    } else {
+      setSaveStatus("saved");
+      hasUnsavedChanges.current = false;
+    }
 
     // Reset to idle after 2 seconds
     if (saveTimeoutRef.current) {
@@ -67,7 +92,7 @@ const DashboardBuilderPage = () => {
     saveTimeoutRef.current = setTimeout(() => {
       setSaveStatus("idle");
     }, 2000);
-  }, [handleSave, isSaving]);
+  }, [handleSave, isSaving, errors.fieldErrors]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -210,17 +235,23 @@ const DashboardBuilderPage = () => {
               <PersonalInfoForm
                 value={portfolio.personalInfo}
                 onChange={updatePersonalInfo}
+                errors={errors.personalInfo}
               />
             </div>
 
             <div ref={sectionRefs.skills}>
-              <SkillsForm value={portfolio.skills} onChange={updateSkills} />
+              <SkillsForm
+                value={portfolio.skills}
+                onChange={updateSkills}
+                error={errors.skills}
+              />
             </div>
 
             <div ref={sectionRefs.projects}>
               <ProjectsForm
                 value={portfolio.projects}
                 onChange={updateProjects}
+                errors={errors.projects}
               />
             </div>
 
@@ -228,6 +259,7 @@ const DashboardBuilderPage = () => {
               <ExperienceForm
                 value={portfolio.experience ?? []}
                 onChange={updateExperience}
+                errors={errors.experience}
               />
             </div>
 
@@ -235,6 +267,7 @@ const DashboardBuilderPage = () => {
               <EducationForm
                 value={portfolio.education ?? []}
                 onChange={updateEducation}
+                errors={errors.education}
               />
             </div>
 

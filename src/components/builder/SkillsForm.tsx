@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 type SkillsFormProps = {
   value: Skill[];
   onChange: (value: Skill[]) => void;
+  error?: string;
   className?: string;
 };
 
-export const SkillsForm = ({ value, onChange, className }: SkillsFormProps) => {
+export const SkillsForm = ({ value, onChange, error, className }: SkillsFormProps) => {
   const [draftSkill, setDraftSkill] = useState("");
 
   const handleAddSkill = () => {
@@ -34,6 +35,11 @@ export const SkillsForm = ({ value, onChange, className }: SkillsFormProps) => {
     >
       <div className="space-y-6">
         <FormSection title="Add Skills">
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
             <div className="space-y-2">
               <Label htmlFor="skill">Skill</Label>

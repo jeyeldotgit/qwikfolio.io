@@ -42,9 +42,13 @@ export const ProjectsForm = ({
   className,
 }: ProjectsFormProps) => {
   // Track custom tech input for each project
-  const [customTechInputs, setCustomTechInputs] = useState<Record<number, string>>({});
+  const [customTechInputs, setCustomTechInputs] = useState<
+    Record<number, string>
+  >({});
   // Track which projects have "Other" selected
-  const [showCustomInput, setShowCustomInput] = useState<Record<number, boolean>>({});
+  const [showCustomInput, setShowCustomInput] = useState<
+    Record<number, boolean>
+  >({});
 
   const handleProjectChange = (index: number, updated: Project) => {
     onChange(value.map((project, idx) => (idx === index ? updated : project)));
@@ -161,7 +165,10 @@ export const ProjectsForm = ({
                       name: event.target.value,
                     })
                   }
-                  className={cn(errors[index]?.name && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                  className={cn(
+                    errors[index]?.name &&
+                      "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  )}
                 />
                 {errors[index]?.name && (
                   <p className="text-xs text-red-600 dark:text-red-400">
@@ -185,7 +192,10 @@ export const ProjectsForm = ({
                       description: event.target.value,
                     })
                   }
-                  className={cn(errors[index]?.description && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                  className={cn(
+                    errors[index]?.description &&
+                      "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  )}
                 />
                 {errors[index]?.description && (
                   <p className="text-xs text-red-600 dark:text-red-400">
@@ -197,27 +207,27 @@ export const ProjectsForm = ({
                 <Label htmlFor={`project-tech-${index}`} required>
                   Tech Stack
                 </Label>
-                  <div className="space-y-3">
-                    {errors[index]?.techStack && (
-                      <p className="text-xs text-red-600 dark:text-red-400">
-                        {errors[index].techStack}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      {project.techStack.map((tech) => (
-                        <button
-                          key={tech}
-                          type="button"
-                          onClick={() => handleRemoveTechStack(index, tech)}
-                          className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
-                        >
-                          <span>{tech}</span>
-                          <span className="ml-1.5 text-emerald-600 dark:text-emerald-300">
-                            ×
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                <div className="space-y-3">
+                  {errors[index]?.techStack && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].techStack}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {project.techStack.map((tech) => (
+                      <button
+                        key={tech}
+                        type="button"
+                        onClick={() => handleRemoveTechStack(index, tech)}
+                        className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+                      >
+                        <span>{tech}</span>
+                        <span className="ml-1.5 text-emerald-600 dark:text-emerald-300">
+                          ×
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                   {showCustomInput[index] ? (
                     <div className="space-y-2">
                       <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
@@ -241,7 +251,10 @@ export const ProjectsForm = ({
                           type="button"
                           size="sm"
                           onClick={() => handleCustomTechSubmit(index)}
-                          disabled={!customTechInputs[index]?.trim() || customTechInputs[index]?.trim().length < 2}
+                          disabled={
+                            !customTechInputs[index]?.trim() ||
+                            customTechInputs[index]?.trim().length < 2
+                          }
                         >
                           Add
                         </Button>
@@ -300,7 +313,10 @@ export const ProjectsForm = ({
                         repoUrl: event.target.value,
                       })
                     }
-                    className={cn(errors[index]?.repoUrl && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    className={cn(
+                      errors[index]?.repoUrl &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
                   />
                   {errors[index]?.repoUrl && (
                     <p className="text-xs text-red-600 dark:text-red-400">
@@ -323,7 +339,10 @@ export const ProjectsForm = ({
                         liveUrl: event.target.value,
                       })
                     }
-                    className={cn(errors[index]?.liveUrl && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    className={cn(
+                      errors[index]?.liveUrl &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
                   />
                   {errors[index]?.liveUrl && (
                     <p className="text-xs text-red-600 dark:text-red-400">

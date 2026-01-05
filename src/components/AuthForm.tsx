@@ -14,7 +14,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Mail, CheckCircle2 } from "lucide-react";
+import { Mail, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AuthMode = "signIn" | "signUp";
 
@@ -40,6 +41,8 @@ export const AuthForm = ({
   const { toast } = useToast();
   const [isEmailConfirmationModalOpen, setIsEmailConfirmationModalOpen] =
     useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const onValid = (formValues: SignInFormValues | SignUpFormValues) => {
     const action = mode === "signUp" ? signUpWithEmail : signInWithEmail;
@@ -104,7 +107,12 @@ export const AuthForm = ({
             id="email"
             type="email"
             autoComplete="email"
-            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            className={cn(
+              "w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 text-sm transition-colors",
+              errors.email
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "border-slate-300 dark:border-slate-700 focus:ring-emerald-500 focus:border-emerald-500"
+            )}
             placeholder="you@example.com"
             value={values.email}
             onChange={(event) => handleChange("email", event.target.value)}
@@ -123,17 +131,36 @@ export const AuthForm = ({
           >
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete={
-              mode === "signUp" ? "new-password" : "current-password"
-            }
-            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-            placeholder="••••••••"
-            value={values.password}
-            onChange={(event) => handleChange("password", event.target.value)}
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={
+                mode === "signUp" ? "new-password" : "current-password"
+              }
+              className={cn(
+                "w-full px-3 py-2 pr-10 rounded-lg border bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 text-sm transition-colors",
+                errors.password
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : "border-slate-300 dark:border-slate-700 focus:ring-emerald-500 focus:border-emerald-500"
+              )}
+              placeholder="••••••••"
+              value={values.password}
+              onChange={(event) => handleChange("password", event.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
           {errors.password ? (
             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {errors.password}
@@ -149,17 +176,40 @@ export const AuthForm = ({
             >
               Confirm password
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-              placeholder="••••••••"
-              value={"confirmPassword" in values ? values.confirmPassword : ""}
-              onChange={(event) =>
-                handleChange("confirmPassword", event.target.value)
-              }
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                className={cn(
+                  "w-full px-3 py-2 pr-10 rounded-lg border bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 text-sm transition-colors",
+                  errors.confirmPassword
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-slate-300 dark:border-slate-700 focus:ring-emerald-500 focus:border-emerald-500"
+                )}
+                placeholder="••••••••"
+                value={
+                  "confirmPassword" in values ? values.confirmPassword : ""
+                }
+                onChange={(event) =>
+                  handleChange("confirmPassword", event.target.value)
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             {errors.confirmPassword ? (
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                 {errors.confirmPassword}
@@ -223,13 +273,6 @@ export const AuthForm = ({
             <p className="text-xs text-emerald-900 dark:text-emerald-200">
               <span className="font-medium">Step 2:</span> Click the
               confirmation link in the email
-            </p>
-          </div>
-          <div className="flex items-start gap-2">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <p className="text-xs text-emerald-900 dark:text-emerald-200">
-              <span className="font-medium">Step 3:</span> Return here and sign
-              in with your credentials
             </p>
           </div>
         </div>

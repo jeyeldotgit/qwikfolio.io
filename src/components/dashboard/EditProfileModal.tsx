@@ -1,19 +1,30 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import {
-  createProfile,
-  updateProfile,
-  getProfile,
-} from "@/services/profile/profileService";
+import { useProfile } from "@/hooks/useProfile";
+import { updateProfile } from "@/services/profile/profileService";
 import { uploadAvatar } from "@/services/storage/avatarStorageService";
 import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const ProfileCompletionPage = () => {
-  const navigate = useNavigate();
+type EditProfileModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+export const EditProfileModal = ({
+  open,
+  onOpenChange,
+}: EditProfileModalProps) => {
   const { user } = useAuthSession();
+  const { profile, refetch } = useProfile();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
@@ -26,20 +37,26 @@ const ProfileCompletionPage = () => {
 
   // Check if user has an avatar in OAuth
   const oAuthAvatarUrl = user?.user_metadata?.avatar_url;
-  const oAuthDisplayName = user?.user_metadata?.full_name;
 
-  // Initialize preview with OAuth avatar if available and not removed
+  // Initialize form with profile data when modal opens or profile loads
   useEffect(() => {
-    if (
-      oAuthAvatarUrl &&
-      !oAuthAvatarRemoved &&
-      !selectedFile &&
-      oAuthDisplayName
-    ) {
-      setPreviewUrl(oAuthAvatarUrl);
-      setFullName(oAuthDisplayName);
+    if (open && profile) {
+      setFullName(profile.full_name || "");
+      setUsername(profile.username || "");
+      // Set preview to profile avatar or OAuth avatar
+      if (profile.avatar_url) {
+        setPreviewUrl(profile.avatar_url);
+      } else if (oAuthAvatarUrl && !oAuthAvatarRemoved) {
+        setPreviewUrl(oAuthAvatarUrl);
+      } else {
+        setPreviewUrl(null);
+      }
+      setSelectedFile(null);
+      setOAuthAvatarRemoved(false);
+      setError(null);
     }
-  }, [oAuthAvatarUrl, oAuthAvatarRemoved, selectedFile, oAuthDisplayName]);
+  }, [open, profile, oAuthAvatarUrl, oAuthAvatarRemoved]);
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -56,9 +73,9 @@ const ProfileCompletionPage = () => {
       return;
     }
 
-    // When a new file is selected, it overrides the OAuth avatar
+    // When a new file is selected, it overrides the existing avatar
     setSelectedFile(file);
-    setOAuthAvatarRemoved(false); // Reset this since we're using a new file
+    setOAuthAvatarRemoved(false);
     setError(null);
 
     // Create preview URL
@@ -83,7 +100,7 @@ const ProfileCompletionPage = () => {
     setError(null);
 
     if (!user?.id) {
-      setError("You must be signed in to complete your profile");
+      setError("You must be signed in to update your profile");
       return;
     }
 
@@ -92,8 +109,10 @@ const ProfileCompletionPage = () => {
     try {
       // Determine avatar URL:
       // 1. If a new file was uploaded, use that (takes precedence)
-      // 2. If OAuth avatar exists and wasn't removed, use that
-      // 3. Otherwise, no avatar (null)
+      // 2. If previewUrl is null (avatar was removed), set to null
+      // 3. If profile has existing avatar_url and preview shows it, keep it
+      // 4. If OAuth avatar exists and preview shows it, use it
+      // 5. Otherwise, no avatar (null)
       let avatarUrl: string | null = null;
 
       if (selectedFile) {
@@ -104,33 +123,25 @@ const ProfileCompletionPage = () => {
           setIsSubmitting(false);
           return;
         }
-      } else if (oAuthAvatarUrl && !oAuthAvatarRemoved) {
-        // Use OAuth avatar if it exists and wasn't removed
+      } else if (!previewUrl) {
+        // User removed the avatar (either profile or OAuth)
+        avatarUrl = null;
+      } else if (profile?.avatar_url && previewUrl === profile.avatar_url) {
+        // Keep existing profile avatar
+        avatarUrl = profile.avatar_url;
+      } else if (oAuthAvatarUrl && previewUrl === oAuthAvatarUrl) {
+        // Use OAuth avatar
         avatarUrl = oAuthAvatarUrl;
       }
-      // If both are null/removed, avatarUrl stays null (no avatar)
 
-      // Check if profile exists
-      const existingProfile = await getProfile(user.id);
-
-      const result = existingProfile
-        ? await updateProfile(user.id, {
-            full_name: fullName.trim() || null,
-            username: username.trim() || null,
-            avatar_url: avatarUrl,
-            onboarding_completed: true,
-          })
-        : await createProfile(user.id, {
-            full_name: fullName.trim() || null,
-            username: username.trim() || null,
-            avatar_url: avatarUrl,
-            onboarding_completed: true,
-            plan: "free",
-            last_seen_at: new Date().toISOString(),
-          });
+      const result = await updateProfile(user.id, {
+        full_name: fullName.trim() || null,
+        username: username.trim() || null,
+        avatar_url: avatarUrl,
+      });
 
       if (!result) {
-        const errorMessage = "Failed to save profile. Please try again.";
+        const errorMessage = "Failed to update profile. Please try again.";
         setError(errorMessage);
         toast({
           variant: "destructive",
@@ -141,12 +152,15 @@ const ProfileCompletionPage = () => {
         return;
       }
 
+      // Refetch profile to get updated data
+      await refetch();
+
       toast({
         variant: "success",
-        title: "Profile completed!",
-        description: "Your profile has been saved successfully.",
+        title: "Profile updated!",
+        description: "Your profile has been updated successfully.",
       });
-      navigate("/dashboard");
+      onOpenChange(false);
     } catch (err) {
       const errorMessage = "An error occurred. Please try again.";
       setError(errorMessage);
@@ -160,17 +174,14 @@ const ProfileCompletionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-6 sm:p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-            Complete your profile
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Add a few details so your QwikFolio feels personal. You can change
-            this later.
-          </p>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <div>
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>
+            Update your profile information. You can change this anytime.
+          </DialogDescription>
+        </DialogHeader>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -221,7 +232,7 @@ const ProfileCompletionPage = () => {
                   {previewUrl ? "Change picture" : "Upload picture"}
                 </Button>
                 <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  JPG, PNG or GIF. Max 5MB.
+                  JPG, PNG or GIF. Max 1MB.
                 </p>
               </div>
             </div>
@@ -242,6 +253,9 @@ const ProfileCompletionPage = () => {
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
             />
+          </div>
+
+          <div>
             <label
               htmlFor="username"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
@@ -262,17 +276,25 @@ const ProfileCompletionPage = () => {
             <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           ) : null}
 
-          <Button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm h-10"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Continue to dashboard"}
-          </Button>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogFooter>
         </form>
       </div>
-    </div>
+    </Dialog>
   );
 };
-
-export default ProfileCompletionPage;

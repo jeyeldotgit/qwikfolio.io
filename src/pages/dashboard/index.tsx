@@ -8,6 +8,7 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { CompletionBadge } from "@/components/dashboard/CompletionBadge";
 import { ProfileMenu } from "@/components/dashboard/ProfileMenu";
+import { EditProfileModal } from "@/components/dashboard/EditProfileModal";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import {
   Dialog,
@@ -39,6 +40,7 @@ const DashboardPage = () => {
   } = useDashboardAnalytics();
   const { toast } = useToast();
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [statusOverride, setStatusOverride] = useState<
     "draft" | "published" | null
   >(null);
@@ -62,7 +64,7 @@ const DashboardPage = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/onboarding");
+    setIsEditProfileModalOpen(true);
   };
 
   const handleLogout = async () => {
@@ -195,6 +197,11 @@ const DashboardPage = () => {
         <main>
           <EmptyState onCreatePortfolio={handleCreatePortfolio} />
         </main>
+
+        <EditProfileModal
+          open={isEditProfileModalOpen}
+          onOpenChange={setIsEditProfileModalOpen}
+        />
       </div>
     );
   }
@@ -381,6 +388,11 @@ const DashboardPage = () => {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      <EditProfileModal
+        open={isEditProfileModalOpen}
+        onOpenChange={setIsEditProfileModalOpen}
+      />
     </div>
   );
 };

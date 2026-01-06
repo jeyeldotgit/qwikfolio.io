@@ -16,7 +16,7 @@ export const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
       onClick={() => onOpenChange(false)}
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+        className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
         onClick={(event) => event.stopPropagation()}
       >
         {children}

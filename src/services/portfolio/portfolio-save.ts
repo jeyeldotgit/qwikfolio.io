@@ -1,10 +1,10 @@
 import supabase from "@/lib/supabase";
 import { PortfolioServiceError } from "./portfolio-errors";
-import type { Portfolio } from "@/schemas/portfolio";
+import type { Portfolio, Skill, Certification } from "@/schemas/portfolio";
 
 export const saveSkills = async (
   userId: string,
-  skills: string[]
+  skills: Skill[]
 ): Promise<void> => {
   const { error: deleteError } = await supabase
     .from("skills")
@@ -21,7 +21,12 @@ export const saveSkills = async (
   if (skills.length > 0) {
     const skillsToInsert = skills.map((skill) => ({
       user_id: userId,
-      skill,
+      name: skill.name,
+      category: skill.category,
+      level: skill.level,
+      years_experience: skill.yearsExperience || null,
+      // Keep legacy skill field for backward compatibility
+      skill: skill.name,
     }));
 
     const { error: insertError } = await supabase
@@ -76,6 +81,12 @@ export const saveProjects = async (
       description: project.description,
       repo_url: project.repoUrl || null,
       live_url: project.liveUrl || null,
+      role: project.role || null,
+      highlights: project.highlights && project.highlights.length > 0 ? project.highlights : null,
+      tags: project.tags && project.tags.length > 0 ? project.tags : null,
+      featured: project.featured || false,
+      order: project.order || 0,
+      media: project.media && project.media.length > 0 ? project.media : null,
     };
 
     if (project.id && existingProjectIds.has(project.id)) {
@@ -170,7 +181,10 @@ export const saveExperience = async (
       start_date: exp.startDate,
       end_date: exp.endDate || null,
       current: exp.current || false,
-      description: exp.description,
+      location: exp.location || null,
+      employment_type: exp.employmentType || null,
+      description: exp.description || null,
+      achievements: exp.achievements && exp.achievements.length > 0 ? exp.achievements : null,
     }));
 
     const { error: insertError } = await supabase
@@ -212,6 +226,9 @@ export const saveEducation = async (
       end_date: edu.endDate || null,
       current: edu.current || false,
       description: edu.description || null,
+      gpa: edu.gpa || null,
+      coursework: edu.coursework && edu.coursework.length > 0 ? edu.coursework : null,
+      honors: edu.honors || null,
     }));
 
     const { error: insertError } = await supabase
@@ -221,6 +238,46 @@ export const saveEducation = async (
     if (insertError) {
       throw new PortfolioServiceError(
         `Failed to insert education: ${insertError.message}`,
+        insertError.code
+      );
+    }
+  }
+};
+
+export const saveCertifications = async (
+  userId: string,
+  certifications: Certification[] | undefined
+): Promise<void> => {
+  const { error: deleteError } = await supabase
+    .from("certifications")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    throw new PortfolioServiceError(
+      `Failed to delete existing certifications: ${deleteError.message}`,
+      deleteError.code
+    );
+  }
+
+  if (certifications && certifications.length > 0) {
+    const certificationsToInsert = certifications.map((cert) => ({
+      user_id: userId,
+      name: cert.name,
+      issuer: cert.issuer,
+      issue_date: cert.issueDate,
+      expiry_date: cert.expiryDate || null,
+      credential_id: cert.credentialId || null,
+      credential_url: cert.credentialUrl || null,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("certifications")
+      .insert(certificationsToInsert);
+
+    if (insertError) {
+      throw new PortfolioServiceError(
+        `Failed to insert certifications: ${insertError.message}`,
         insertError.code
       );
     }

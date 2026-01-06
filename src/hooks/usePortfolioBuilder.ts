@@ -53,6 +53,14 @@ const createEmptyPortfolio = (): Portfolio => ({
     phone: "",
     bio: "",
     website: "",
+    location: "",
+    roleLevel: undefined,
+    availability: undefined,
+    hourlyRate: undefined,
+    salaryRange: "",
+    profilePhotoUrl: "",
+    socialLinks: [],
+    // Legacy fields for backward compatibility
     github: "",
     linkedin: "",
   },
@@ -60,6 +68,18 @@ const createEmptyPortfolio = (): Portfolio => ({
   projects: [],
   experience: [],
   education: [],
+  settings: {
+    isPublic: false,
+    showContactForm: true,
+  },
+  theme: {
+    id: "emerald",
+    primaryColor: "emerald",
+    accentStyle: "soft",
+    radius: "md",
+    layout: "sidebar-left",
+    showProfilePhoto: true,
+  },
 });
 
 export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {

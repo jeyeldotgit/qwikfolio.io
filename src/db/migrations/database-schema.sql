@@ -427,3 +427,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+
+-- Template Settings Migration
+-- Adds template customization columns to portfolios table
+-- Run this migration after the initial database-schema.sql
+
+-- ============================================
+-- ADD TEMPLATE COLUMNS TO PORTFOLIOS
+-- ============================================
+
+-- Add template_id column with default value
+ALTER TABLE portfolios 
+ADD COLUMN IF NOT EXISTS template_id TEXT DEFAULT 'developer' 
+CHECK (template_id IN ('developer', 'minimal', 'creative'));
+
+-- Add accent color column with default value
+ALTER TABLE portfolios 
+ADD COLUMN IF NOT EXISTS accent TEXT DEFAULT 'emerald'
+CHECK (accent IN ('emerald', 'blue', 'purple', 'rose', 'amber', 'cyan'));
+
+-- Add index for template queries (optional, for future analytics)
+CREATE INDEX IF NOT EXISTS idx_portfolios_template_id ON portfolios(template_id);
+
+-- ============================================
+-- COMMENTS FOR DOCUMENTATION
+-- ============================================
+COMMENT ON COLUMN portfolios.template_id IS 'Selected portfolio template: developer, minimal, or creative';
+COMMENT ON COLUMN portfolios.accent IS 'Accent color theme: emerald, blue, purple, rose, amber, or cyan';
+
+

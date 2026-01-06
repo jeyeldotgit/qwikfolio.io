@@ -139,10 +139,10 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
             <div className="mt-2 flex flex-wrap gap-1.5">
               {skills.map((skill) => (
                 <span
-                  key={skill}
+                  key={skill.name}
                   className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-800"
                 >
-                  {skill}
+                  {skill.name}
                 </span>
               ))}
             </div>

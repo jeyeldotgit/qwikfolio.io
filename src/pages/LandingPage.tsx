@@ -3,7 +3,7 @@ import {
   HeroSection,
   FeaturesSection,
   HowItWorksSection,
-  StatsSection,
+  TestimonialsSection,
   CTASection,
   ContactSection,
   LandingFooter,
@@ -17,7 +17,7 @@ const LandingPage = () => {
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />
-        <StatsSection />
+        <TestimonialsSection />
         <CTASection />
         <ContactSection />
       </main>

@@ -1,10 +1,25 @@
-import type { Portfolio } from "@/schemas/portfolio";
-import { Github, Linkedin, Globe, Mail, ExternalLink } from "lucide-react";
+import type { Portfolio, SocialLink } from "@/schemas/portfolio";
+import { Github, Linkedin, Globe, Mail, ExternalLink, Twitter, Briefcase, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 type DevPortfolioProps = {
   portfolio: Portfolio;
   avatar: string;
+};
+
+const SocialLinkIcon = ({ type }: { type: SocialLink["type"] }) => {
+  const iconMap = {
+    github: Github,
+    linkedin: Linkedin,
+    twitter: Twitter,
+    dribbble: Briefcase,
+    instagram: Globe,
+    facebook: Globe,
+    devto: Globe,
+    portfolio: Globe,
+  };
+  const Icon = iconMap[type] || Globe;
+  return <Icon className="h-4 w-4" />;
 };
 
 const SocialLink = ({
@@ -28,8 +43,43 @@ const SocialLink = ({
   </a>
 );
 
+const getSocialLinkLabel = (type: SocialLink["type"]): string => {
+  const labelMap: Record<SocialLink["type"], string> = {
+    github: "GitHub",
+    linkedin: "LinkedIn",
+    twitter: "Twitter",
+    dribbble: "Dribbble",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    devto: "Dev.to",
+    portfolio: "Portfolio",
+  };
+  return labelMap[type] || type;
+};
+
 export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
   const { personalInfo, skills, projects, experience, education } = portfolio;
+  
+  // Use profilePhotoUrl if available, otherwise fall back to avatar prop
+  const profilePhoto = personalInfo.profilePhotoUrl || avatar;
+  
+  // Build headline with role level if available
+  const headlineWithRole = personalInfo.roleLevel
+    ? `${personalInfo.roleLevel.charAt(0).toUpperCase() + personalInfo.roleLevel.slice(1)} ${personalInfo.headline}`
+    : personalInfo.headline;
+  
+  // Get availability badge text
+  const getAvailabilityBadge = () => {
+    if (!personalInfo.availability) return null;
+    const badges = {
+      open_to_work: { text: "Open to Work", class: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+      freelance: { text: "Available for Freelance", class: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" },
+      not_open: { text: "Not Open to Opportunities", class: "bg-slate-500/10 text-slate-600 dark:text-slate-400" },
+    };
+    return badges[personalInfo.availability];
+  };
+  
+  const availabilityBadge = getAvailabilityBadge();
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 print:hidden">
@@ -53,7 +103,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   <div className="relative h-full w-full overflow-hidden rounded-xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80">
                     <Avatar className="h-full w-full">
                       <AvatarImage
-                        src={avatar}
+                        src={profilePhoto}
                         className="h-full w-full object-cover"
                       />
                       <AvatarFallback className="flex h-full w-full items-center justify-center text-3xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -86,10 +136,23 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                 </h1>
               </div>
 
-              {/* Headline - always visible */}
-              <p className="text-xl font-medium text-slate-600 dark:text-slate-300 sm:text-2xl lg:mt-0 -mt-4">
-                {personalInfo.headline || "Developer"}
-              </p>
+              {/* Headline with role level - always visible */}
+              <div className="space-y-2 lg:mt-0 -mt-4">
+                <p className="text-xl font-medium text-slate-600 dark:text-slate-300 sm:text-2xl">
+                  {headlineWithRole || "Developer"}
+                </p>
+                {personalInfo.location && (
+                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <MapPin className="h-4 w-4" />
+                    <span>{personalInfo.location}</span>
+                  </div>
+                )}
+                {availabilityBadge && (
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${availabilityBadge.class}`}>
+                    {availabilityBadge.text}
+                  </span>
+                )}
+              </div>
 
               {/* Bio */}
               {personalInfo.bio && (
@@ -107,20 +170,6 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                     label="Email"
                   />
                 )}
-                {personalInfo.github && (
-                  <SocialLink
-                    href={personalInfo.github}
-                    icon={Github}
-                    label="GitHub"
-                  />
-                )}
-                {personalInfo.linkedin && (
-                  <SocialLink
-                    href={personalInfo.linkedin}
-                    icon={Linkedin}
-                    label="LinkedIn"
-                  />
-                )}
                 {personalInfo.website && (
                   <SocialLink
                     href={personalInfo.website}
@@ -128,26 +177,61 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                     label="Website"
                   />
                 )}
+                {/* New socialLinks array */}
+                {personalInfo.socialLinks && personalInfo.socialLinks.length > 0 && personalInfo.socialLinks.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-2 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors duration-300"
+                    aria-label={getSocialLinkLabel(link.type)}
+                  >
+                    <SocialLinkIcon type={link.type} />
+                    <span className="text-sm font-medium">{getSocialLinkLabel(link.type)}</span>
+                  </a>
+                ))}
+                {/* Legacy github/linkedin for backward compatibility */}
+                {(!personalInfo.socialLinks || personalInfo.socialLinks.length === 0) && (
+                  <>
+                    {personalInfo.github && (
+                      <SocialLink
+                        href={personalInfo.github}
+                        icon={Github}
+                        label="GitHub"
+                      />
+                    )}
+                    {personalInfo.linkedin && (
+                      <SocialLink
+                        href={personalInfo.linkedin}
+                        icon={Linkedin}
+                        label="LinkedIn"
+                      />
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
             {/* Avatar/Decoration - Desktop only */}
-            <div className="hidden lg:block">
-              <div className="relative h-48 w-48">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 opacity-10 blur-xl dark:opacity-20" />
-                <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80">
-                  <Avatar className="h-full w-full">
-                    <AvatarImage
-                      src={avatar}
-                      className="h-full w-full object-cover"
-                    />
-                    <AvatarFallback className="flex h-full w-full items-center justify-center text-6xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {(personalInfo.name || "U")[0]}
-                    </AvatarFallback>
-                  </Avatar>
+            {portfolio.theme?.showProfilePhoto !== false && (
+              <div className="hidden lg:block">
+                <div className="relative h-48 w-48">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 opacity-10 blur-xl dark:opacity-20" />
+                  <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80">
+                    <Avatar className="h-full w-full">
+                      <AvatarImage
+                        src={profilePhoto}
+                        className="h-full w-full object-cover"
+                      />
+                      <AvatarFallback className="flex h-full w-full items-center justify-center text-6xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {(personalInfo.name || "U")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </header>
@@ -161,11 +245,11 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
           <div className="flex flex-wrap gap-3">
             {skills.map((skill, idx) => (
               <span
-                key={skill}
+                key={skill.name}
                 className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:text-emerald-400"
                 style={{ animationDelay: `${idx * 50}ms` }}
               >
-                <span className="relative z-10">{skill}</span>
+                <span className="relative z-10">{skill.name}</span>
                 <div className="absolute inset-0 -z-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-emerald-500/10 dark:to-cyan-500/10" />
               </span>
             ))}

@@ -8,6 +8,7 @@ import {
   saveProjects,
   saveExperience,
   saveEducation,
+  saveCertifications,
 } from "./portfolio-save";
 
 export const createOrUpdatePortfolio = async (
@@ -30,23 +31,40 @@ export const createOrUpdatePortfolio = async (
       .eq("user_id", userId)
       .single();
 
-    const { error: portfolioError } = await supabase.from("portfolios").upsert(
-      {
-        user_id: userId,
-        name: validPortfolio.personalInfo.name,
-        headline: validPortfolio.personalInfo.headline,
-        email: validPortfolio.personalInfo.email,
-        phone: validPortfolio.personalInfo.phone || null,
-        bio: validPortfolio.personalInfo.bio || null,
-        website: validPortfolio.personalInfo.website || null,
-        github: validPortfolio.personalInfo.github || null,
-        linkedin: validPortfolio.personalInfo.linkedin || null,
-        published: existingPortfolio?.published ?? false,
-      },
-      {
+    // Prepare portfolio data with new fields
+    const portfolioUpdateData: any = {
+      user_id: userId,
+      name: validPortfolio.personalInfo.name,
+      headline: validPortfolio.personalInfo.headline,
+      email: validPortfolio.personalInfo.email,
+      phone: validPortfolio.personalInfo.phone || null,
+      bio: validPortfolio.personalInfo.bio || null,
+      website: validPortfolio.personalInfo.website || null,
+      // Legacy fields for backward compatibility
+      github: validPortfolio.personalInfo.github || null,
+      linkedin: validPortfolio.personalInfo.linkedin || null,
+      // New personal info fields
+      location: validPortfolio.personalInfo.location || null,
+      role_level: validPortfolio.personalInfo.roleLevel || null,
+      availability: validPortfolio.personalInfo.availability || null,
+      hourly_rate: validPortfolio.personalInfo.hourlyRate || null,
+      salary_range: validPortfolio.personalInfo.salaryRange || null,
+      profile_photo_url: validPortfolio.personalInfo.profilePhotoUrl || null,
+      social_links: validPortfolio.personalInfo.socialLinks || [],
+      // Settings and theme
+      settings: validPortfolio.settings || {},
+      theme: validPortfolio.theme || {},
+      primary_stack: validPortfolio.primaryStack || [],
+      slug: validPortfolio.settings.slug || null,
+      // Sync published with settings.isPublic
+      published: validPortfolio.settings.isPublic || existingPortfolio?.published || false,
+    };
+
+    const { error: portfolioError } = await supabase
+      .from("portfolios")
+      .upsert(portfolioUpdateData, {
         onConflict: "user_id",
-      }
-    );
+      });
 
     if (portfolioError) {
       throw new PortfolioServiceError(
@@ -55,10 +73,13 @@ export const createOrUpdatePortfolio = async (
       );
     }
 
-    await saveSkills(userId, validPortfolio.skills);
-    await saveProjects(userId, validPortfolio.projects);
-    await saveExperience(userId, validPortfolio.experience);
-    await saveEducation(userId, validPortfolio.education);
+    await Promise.all([
+      saveSkills(userId, validPortfolio.skills),
+      saveProjects(userId, validPortfolio.projects),
+      saveExperience(userId, validPortfolio.experience),
+      saveEducation(userId, validPortfolio.education),
+      saveCertifications(userId, validPortfolio.certifications),
+    ]);
 
     const savedPortfolio = await getPortfolio(userId);
 

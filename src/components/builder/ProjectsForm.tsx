@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Project } from "@/schemas/portfolio";
+import type { Project, ProjectMedia } from "@/schemas/portfolio";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Plus, X, Star, Image as ImageIcon, Video } from "lucide-react";
 
 type ProjectsFormProps = {
   value: Project[];
@@ -79,6 +80,11 @@ export const ProjectsForm = ({
         techStack: [],
         repoUrl: "",
         liveUrl: "",
+        role: "",
+        highlights: [],
+        tags: [],
+        featured: false,
+        order: value.length,
       },
     ]);
   };
@@ -151,30 +157,48 @@ export const ProjectsForm = ({
         {value.map((project, index) => (
           <FormSection key={project.id ?? index} title={`Project ${index + 1}`}>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor={`project-name-${index}`} required>
-                  Project Name
-                </Label>
-                <Input
-                  id={`project-name-${index}`}
-                  placeholder="e.g., QwikFolio"
-                  value={project.name}
-                  onChange={(event) =>
-                    handleProjectChange(index, {
-                      ...project,
-                      name: event.target.value,
-                    })
-                  }
-                  className={cn(
-                    errors[index]?.name &&
-                      "border-red-500 focus:border-red-500 focus:ring-red-500"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`project-name-${index}`} required>
+                    Project Name
+                  </Label>
+                  <Input
+                    id={`project-name-${index}`}
+                    placeholder="e.g., QwikFolio"
+                    value={project.name}
+                    onChange={(event) =>
+                      handleProjectChange(index, {
+                        ...project,
+                        name: event.target.value,
+                      })
+                    }
+                    className={cn(
+                      errors[index]?.name &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
+                  />
+                  {errors[index]?.name && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {errors[index].name}
+                    </p>
                   )}
-                />
-                {errors[index]?.name && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {errors[index].name}
-                  </p>
-                )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`project-role-${index}`}>
+                    Your Role (optional)
+                  </Label>
+                  <Input
+                    id={`project-role-${index}`}
+                    placeholder="e.g., Frontend Engineer"
+                    value={project.role ?? ""}
+                    onChange={(event) =>
+                      handleProjectChange(index, {
+                        ...project,
+                        role: event.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`project-description-${index}`} required>
@@ -297,6 +321,233 @@ export const ProjectsForm = ({
                   )}
                 </div>
               </div>
+              {/* Highlights */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Highlights (2-5 items)</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const highlights = project.highlights || [];
+                      if (highlights.length < 5) {
+                        handleProjectChange(index, {
+                          ...project,
+                          highlights: [...highlights, ""],
+                        });
+                      }
+                    }}
+                    disabled={(project.highlights?.length || 0) >= 5}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Highlight
+                  </Button>
+                </div>
+                {(project.highlights || []).map((highlight, hIndex) => (
+                  <div key={hIndex} className="flex gap-2">
+                    <Input
+                      placeholder="e.g., Increased performance by 40%"
+                      value={highlight}
+                      onChange={(event) => {
+                        const highlights = [...(project.highlights || [])];
+                        highlights[hIndex] = event.target.value;
+                        handleProjectChange(index, {
+                          ...project,
+                          highlights,
+                        });
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const highlights = (project.highlights || []).filter(
+                          (_, idx) => idx !== hIndex
+                        );
+                        handleProjectChange(index, {
+                          ...project,
+                          highlights,
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {(!project.highlights || project.highlights.length === 0) && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Add key achievements or highlights for this project
+                  </p>
+                )}
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(project.tags || []).map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tags = (project.tags || []).filter((t) => t !== tag);
+                          handleProjectChange(index, {
+                            ...project,
+                            tags,
+                          });
+                        }}
+                        className="ml-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a tag (e.g., Open Source, SaaS)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const input = e.currentTarget;
+                        const tag = input.value.trim();
+                        if (tag && !(project.tags || []).includes(tag)) {
+                          handleProjectChange(index, {
+                            ...project,
+                            tags: [...(project.tags || []), tag],
+                          });
+                          input.value = "";
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Featured & Order */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`project-featured-${index}`}
+                    checked={project.featured || false}
+                    onChange={(event) =>
+                      handleProjectChange(index, {
+                        ...project,
+                        featured: event.target.checked,
+                      })
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <Label
+                    htmlFor={`project-featured-${index}`}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <Star className="h-4 w-4 text-emerald-500" />
+                    Featured Project
+                  </Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`project-order-${index}`}>Display Order</Label>
+                  <Input
+                    id={`project-order-${index}`}
+                    type="number"
+                    min="0"
+                    value={project.order ?? 0}
+                    onChange={(event) =>
+                      handleProjectChange(index, {
+                        ...project,
+                        order: parseInt(event.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Media */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Media (Images/Videos)</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const media = project.media || [];
+                      handleProjectChange(index, {
+                        ...project,
+                        media: [...media, { type: "image", url: "" }],
+                      });
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Media
+                  </Button>
+                </div>
+                {(project.media || []).map((mediaItem, mIndex) => (
+                  <div key={mIndex} className="flex gap-2 items-start">
+                    <select
+                      value={mediaItem.type}
+                      onChange={(e) => {
+                        const media = [...(project.media || [])];
+                        media[mIndex] = {
+                          ...mediaItem,
+                          type: e.target.value as "image" | "video",
+                        };
+                        handleProjectChange(index, { ...project, media });
+                      }}
+                      className={cn(
+                        "flex h-9 w-32 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs"
+                      )}
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                    <Input
+                      type="url"
+                      placeholder="https://..."
+                      value={mediaItem.url}
+                      onChange={(e) => {
+                        const media = [...(project.media || [])];
+                        media[mIndex] = { ...mediaItem, url: e.target.value };
+                        handleProjectChange(index, { ...project, media });
+                      }}
+                      className="flex-1"
+                    />
+                    {mediaItem.type === "image" && mediaItem.url && (
+                      <img
+                        src={mediaItem.url}
+                        alt="Preview"
+                        className="h-10 w-10 rounded object-cover border border-slate-200 dark:border-slate-700"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const media = (project.media || []).filter(
+                          (_, idx) => idx !== mIndex
+                        );
+                        handleProjectChange(index, { ...project, media });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`project-repo-${index}`}>

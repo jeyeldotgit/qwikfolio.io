@@ -20,6 +20,7 @@ const DashboardBuilderPage = () => {
     errors,
     updatePersonalInfo,
     updateSkills,
+    updatePrimaryStack,
     updateProjects,
     updateExperience,
     updateEducation,
@@ -243,6 +244,8 @@ const DashboardBuilderPage = () => {
               <SkillsForm
                 value={portfolio.skills}
                 onChange={updateSkills}
+                primaryStack={portfolio.primaryStack}
+                onPrimaryStackChange={updatePrimaryStack}
                 error={errors.skills}
               />
             </div>

@@ -39,6 +39,7 @@ type UsePortfolioBuilderResult = {
   errors: PortfolioBuilderErrors;
   updatePersonalInfo: (value: PersonalInfo) => void;
   updateSkills: (value: Skill[]) => void;
+  updatePrimaryStack: (value: string[]) => void;
   updateProjects: (value: Project[]) => void;
   updateExperience: (value: Experience[]) => void;
   updateEducation: (value: Education[]) => void;
@@ -161,6 +162,14 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         skills: undefined,
       }));
     }
+  };
+
+  const updatePrimaryStack = (value: string[]) => {
+    if (!portfolio) return;
+    setPortfolio((prev) => ({
+      ...prev!,
+      primaryStack: value,
+    }));
   };
 
   const updateProjects = (value: Project[]) => {
@@ -318,6 +327,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     errors,
     updatePersonalInfo,
     updateSkills,
+    updatePrimaryStack,
     updateProjects,
     updateExperience,
     updateEducation,

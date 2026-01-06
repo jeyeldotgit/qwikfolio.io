@@ -1,6 +1,7 @@
 import type { Portfolio, SocialLink } from "@/schemas/portfolio";
-import { Github, Linkedin, Globe, Mail, ExternalLink, Twitter, Briefcase, MapPin } from "lucide-react";
+import { Github, Linkedin, Globe, Mail, ExternalLink, Twitter, Briefcase, MapPin, Star, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { cn } from "@/lib/utils";
 
 type DevPortfolioProps = {
   portfolio: Portfolio;
@@ -58,7 +59,24 @@ const getSocialLinkLabel = (type: SocialLink["type"]): string => {
 };
 
 export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
-  const { personalInfo, skills, projects, experience, education } = portfolio;
+  const { personalInfo, skills, projects, experience, education, primaryStack } = portfolio;
+  
+  // Group skills by category
+  const skillsByCategory = skills.reduce((acc, skill) => {
+    const category = skill.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(skill);
+    return acc;
+  }, {} as Record<string, typeof skills>);
+  
+  // Sort projects by order, then by featured
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return (a.order || 0) - (b.order || 0);
+  });
   
   // Use profilePhotoUrl if available, otherwise fall back to avatar prop
   const profilePhoto = personalInfo.profilePhotoUrl || avatar;
@@ -242,18 +260,66 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
           <h2 className="mb-8 font-mono text-sm tracking-wider text-slate-400 dark:text-slate-500">
             {"// tech_stack"}
           </h2>
-          <div className="flex flex-wrap gap-3">
-            {skills.map((skill, idx) => (
-              <span
-                key={skill.name}
-                className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:text-emerald-400"
-                style={{ animationDelay: `${idx * 50}ms` }}
-              >
-                <span className="relative z-10">{skill.name}</span>
-                <div className="absolute inset-0 -z-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-emerald-500/10 dark:to-cyan-500/10" />
-              </span>
-            ))}
-          </div>
+          
+          {/* Primary Stack */}
+          {primaryStack && primaryStack.length > 0 && (
+            <div className="mb-8">
+              <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Primary Stack
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                  {primaryStack.map((skillName) => {
+                  const skill = skills.find((s) => s.name === skillName);
+                  if (!skill) return null;
+                  return (
+                    <span
+                      key={skill.name}
+                      className="group relative overflow-hidden rounded-lg border-2 border-emerald-500/50 bg-emerald-50/50 px-4 py-2 text-sm font-medium text-emerald-900 transition-all duration-300 hover:border-emerald-500 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-950/50"
+                    >
+                      <span className="relative z-10 flex items-center gap-1.5">
+                        <Star className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" />
+                        {skill.name}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Skills by Category */}
+          {Object.entries(skillsByCategory).map(([category, categorySkills]) => (
+            <div key={category} className="mb-6 last:mb-0">
+              <h3 className="mb-3 text-sm font-semibold capitalize text-slate-700 dark:text-slate-300">
+                {category.replace("_", " ")}
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {categorySkills.map((skill, idx) => {
+                  const isPrimary = primaryStack?.includes(skill.name);
+                  return (
+                    <span
+                      key={skill.name}
+                      className={cn(
+                        "group relative overflow-hidden rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300",
+                        isPrimary
+                          ? "border-emerald-500/50 bg-emerald-50/50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-200"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-emerald-500/50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:text-emerald-400"
+                      )}
+                      style={{ animationDelay: `${idx * 50}ms` }}
+                    >
+                      <span className="relative z-10">{skill.name}</span>
+                      {skill.level && (
+                        <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                          ({skill.level})
+                        </span>
+                      )}
+                      <div className="absolute inset-0 -z-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-emerald-500/10 dark:to-cyan-500/10" />
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -264,25 +330,103 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
             {"// featured_projects"}
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {projects.map((project, idx) => (
+            {sortedProjects.map((project, idx) => (
               <article
                 key={project.id ?? project.name}
-                className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-6 transition-all duration-500 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 dark:hover:bg-slate-900/80"
+                className={cn(
+                  "group relative overflow-hidden rounded-xl border p-6 transition-all duration-500 hover:shadow-lg",
+                  project.featured
+                    ? "border-emerald-500/50 bg-emerald-50/30 dark:border-emerald-500/30 dark:bg-emerald-950/20"
+                    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 dark:hover:bg-slate-900/80"
+                )}
               >
+                {/* Featured Badge */}
+                {project.featured && (
+                  <div className="absolute right-6 top-6 flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                    <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" />
+                    Featured
+                  </div>
+                )}
+
                 {/* Project number indicator */}
-                <span className="absolute right-6 top-6 font-mono text-5xl font-bold text-slate-100 transition-colors duration-500 group-hover:text-slate-200 dark:text-slate-800 dark:group-hover:text-slate-700">
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
+                {!project.featured && (
+                  <span className="absolute right-6 top-6 font-mono text-5xl font-bold text-slate-100 transition-colors duration-500 group-hover:text-slate-200 dark:text-slate-800 dark:group-hover:text-slate-700">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                )}
 
                 <div className="relative space-y-4">
+                  {/* Media Preview */}
+                  {project.media && project.media.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {project.media.slice(0, 2).map((media, mIdx) => (
+                        <div
+                          key={mIdx}
+                          className="relative aspect-video overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800"
+                        >
+                          {media.type === "image" ? (
+                            <img
+                              src={media.url}
+                              alt={`${project.name} preview ${mIdx + 1}`}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Video className="h-8 w-8 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900 transition-colors duration-300 group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
-                      {project.name}
-                    </h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-xl font-bold text-slate-900 transition-colors duration-300 group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400">
+                        {project.name}
+                      </h3>
+                    </div>
+                    {project.role && (
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {project.role}
+                      </p>
+                    )}
                     <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                       {project.description}
                     </p>
                   </div>
+
+                  {/* Highlights */}
+                  {project.highlights && project.highlights.length > 0 && (
+                    <ul className="space-y-1.5">
+                      {project.highlights.map((highlight, hIdx) => (
+                        <li
+                          key={hIdx}
+                          className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                          <span>{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Tags */}
+                  {project.tags && project.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {project.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Tech Stack */}
                   <div className="flex flex-wrap gap-2">

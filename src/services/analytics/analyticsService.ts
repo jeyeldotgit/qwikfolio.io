@@ -9,7 +9,13 @@ class AnalyticsServiceError extends Error {
   }
 }
 
-export const trackPortfolioView = async (userId: string): Promise<void> => {
+/**
+ * Track portfolio view by slug or userId
+ */
+export const trackPortfolioView = async (
+  slug: string | null,
+  userId: string
+): Promise<void> => {
   try {
     // Use RPC function to bypass RLS for public views
     const { error } = await supabase.rpc("track_portfolio_view", {
@@ -23,6 +29,7 @@ export const trackPortfolioView = async (userId: string): Promise<void> => {
         .insert({
           user_id: userId,
           event_type: "view",
+          metadata: slug ? { slug } : null,
         });
 
       if (insertError) {
@@ -33,6 +40,153 @@ export const trackPortfolioView = async (userId: string): Promise<void> => {
   } catch (error) {
     console.error("Error tracking portfolio view:", error);
     // Don't throw - analytics failures shouldn't break the app
+  }
+};
+
+/**
+ * Track contact form click
+ */
+export const trackContactClick = async (
+  slug: string,
+  type: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase.from("portfolio_analytics").insert({
+      event_type: "contact_click",
+      metadata: { slug, type },
+    });
+
+    if (error) {
+      console.error("Failed to track contact click:", error);
+    }
+  } catch (error) {
+    console.error("Error tracking contact click:", error);
+  }
+};
+
+/**
+ * Track social link click
+ */
+export const trackSocialLinkClick = async (
+  slug: string,
+  type: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase.from("portfolio_analytics").insert({
+      event_type: "social_click",
+      metadata: { slug, type },
+    });
+
+    if (error) {
+      console.error("Failed to track social link click:", error);
+    }
+  } catch (error) {
+    console.error("Error tracking social link click:", error);
+  }
+};
+
+/**
+ * Track project view
+ */
+export const trackProjectView = async (
+  slug: string,
+  projectId: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase.from("portfolio_analytics").insert({
+      event_type: "project_view",
+      metadata: { slug, project_id: projectId },
+    });
+
+    if (error) {
+      console.error("Failed to track project view:", error);
+    }
+  } catch (error) {
+    console.error("Error tracking project view:", error);
+  }
+};
+
+/**
+ * Get portfolio views for a specific slug
+ */
+export const getPortfolioViews = async (
+  slug: string,
+  timeRange: "day" | "week" | "month" | "all" = "all"
+): Promise<number> => {
+  try {
+    let startDate: Date | null = null;
+    if (timeRange !== "all") {
+      startDate = new Date();
+      if (timeRange === "day") {
+        startDate.setDate(startDate.getDate() - 1);
+      } else if (timeRange === "week") {
+        startDate.setDate(startDate.getDate() - 7);
+      } else if (timeRange === "month") {
+        startDate.setMonth(startDate.getMonth() - 1);
+      }
+    }
+
+    const query = supabase
+      .from("portfolio_analytics")
+      .select("*", { count: "exact", head: true })
+      .eq("event_type", "view")
+      .contains("metadata", { slug });
+
+    if (startDate) {
+      query.gte("created_at", startDate.toISOString());
+    }
+
+    const { count, error } = await query;
+
+    if (error) {
+      console.error("Failed to get portfolio views:", error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("Error getting portfolio views:", error);
+    return 0;
+  }
+};
+
+/**
+ * Get top viewed projects for a portfolio
+ */
+export const getTopProjects = async (
+  slug: string
+): Promise<Array<{ id: string; views: number }>> => {
+  try {
+    const { data, error } = await supabase
+      .from("portfolio_analytics")
+      .select("metadata")
+      .eq("event_type", "project_view")
+      .contains("metadata", { slug });
+
+    if (error) {
+      console.error("Failed to get top projects:", error);
+      return [];
+    }
+
+    // Aggregate project views
+    const projectViews = new Map<string, number>();
+    data?.forEach((event) => {
+      const projectId = event.metadata?.project_id;
+      if (projectId) {
+        projectViews.set(
+          projectId,
+          (projectViews.get(projectId) || 0) + 1
+        );
+      }
+    });
+
+    // Convert to array and sort by views
+    return Array.from(projectViews.entries())
+      .map(([id, views]) => ({ id, views }))
+      .sort((a, b) => b.views - a.views);
+  } catch (error) {
+    console.error("Error getting top projects:", error);
+    return [];
   }
 };
 

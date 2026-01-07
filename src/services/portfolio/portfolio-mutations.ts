@@ -131,9 +131,32 @@ export const updatePortfolioPublishedStatus = async (
   published: boolean
 ): Promise<void> => {
   try {
+    // Get current settings to update isPublic as well
+    const { data: currentPortfolio, error: fetchError } = await supabase
+      .from("portfolios")
+      .select("settings")
+      .eq("user_id", userId)
+      .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      throw new PortfolioServiceError(
+        `Failed to fetch portfolio: ${fetchError.message}`
+      );
+    }
+
+    // Update both published column and settings.isPublic to keep them in sync
+    const currentSettings = currentPortfolio?.settings || {};
+    const updatedSettings = {
+      ...currentSettings,
+      isPublic: published,
+    };
+
     const { error } = await supabase
       .from("portfolios")
-      .update({ published })
+      .update({ 
+        published,
+        settings: updatedSettings,
+      })
       .eq("user_id", userId);
 
     if (error) {

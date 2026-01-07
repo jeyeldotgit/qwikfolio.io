@@ -55,8 +55,11 @@ export const EducationForm = ({
       className={className}
     >
       <div className="space-y-6">
-        {value.map((edu, index) => (
-          <FormSection key={edu.id ?? index} title={`Education ${index + 1}`}>
+        {value.map((edu, index) => {
+          // Create a stable key that doesn't change on re-render
+          const stableKey = edu.id ?? `edu-${index}-${edu.school || edu.degree || edu.startDate || 'new'}`;
+          return (
+          <FormSection key={stableKey} title={`Education ${index + 1}`}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -323,7 +326,8 @@ export const EducationForm = ({
               </div>
             </div>
           </FormSection>
-        ))}
+          );
+        })}
 
         <div className="flex justify-start">
           <Button

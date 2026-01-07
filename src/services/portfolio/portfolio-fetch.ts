@@ -72,33 +72,49 @@ export const getPortfolio = async (
 /**
  * Get public portfolio by username or slug
  * @param identifier - Username or slug
- * @returns Portfolio if found and public, null otherwise
+ * @returns Object with portfolio and userId if found and public, null otherwise
  */
 export const getPublicPortfolioByUsername = async (
   identifier: string
-): Promise<Portfolio | null> => {
+): Promise<{ portfolio: Portfolio; userId: string } | null> => {
   try {
+    let portfolioData: any = null;
+    let userId: string | null = null;
+
     // First, try to find by slug
+    // Query portfolios where slug matches
     const { data: portfolioBySlug, error: slugError } = await supabase
       .from("portfolios")
       .select("*, user_id")
       .eq("slug", identifier)
-      .or("published.eq.true,settings->>isPublic.eq.true")
-      .single();
-
-    let portfolioData = portfolioBySlug;
-    let userId: string | null = null;
+      .maybeSingle();
+    
+    // Log for debugging
+    if (slugError && slugError.code !== "PGRST116") {
+      console.error("Error fetching portfolio by slug:", slugError);
+    }
 
     if (portfolioBySlug && !slugError) {
-      // Found by slug
-      userId = portfolioBySlug.user_id;
-    } else {
-      // Try to find by username
+      // Found by slug - verify it's actually published
+      const isPublished = portfolioBySlug.published === true;
+      const isPublic = portfolioBySlug.settings?.isPublic === true;
+      
+      if (isPublished || isPublic) {
+        portfolioData = portfolioBySlug;
+        userId = portfolioBySlug.user_id;
+      } else {
+        // Portfolio found but not published
+        throw new PortfolioServiceError("Portfolio not found or not published");
+      }
+    }
+
+    // If not found by slug, try to find by username
+    if (!portfolioData || !userId) {
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("id")
         .eq("username", identifier)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profileData) {
         throw new PortfolioServiceError("Profile not found");
@@ -106,15 +122,28 @@ export const getPublicPortfolioByUsername = async (
 
       userId = profileData.id;
 
-      // Check both published and settings.isPublic for public access
+      // Check portfolio for this user
       const { data: portfolioDataByUser, error: portfolioError } = await supabase
         .from("portfolios")
         .select("*")
         .eq("user_id", profileData.id)
-        .or("published.eq.true,settings->>isPublic.eq.true")
-        .single();
+        .maybeSingle();
 
-      if (portfolioError || !portfolioDataByUser) {
+      if (portfolioError) {
+        throw new PortfolioServiceError(
+          `Failed to fetch portfolio: ${portfolioError.message}`
+        );
+      }
+
+      if (!portfolioDataByUser) {
+        throw new PortfolioServiceError("Portfolio not found or not published");
+      }
+
+      // Verify it's actually published
+      const isPublished = portfolioDataByUser.published === true;
+      const isPublic = portfolioDataByUser.settings?.isPublic === true;
+      
+      if (!isPublished && !isPublic) {
         throw new PortfolioServiceError("Portfolio not found or not published");
       }
 
@@ -122,10 +151,6 @@ export const getPublicPortfolioByUsername = async (
     }
 
     if (!portfolioData || !userId) {
-      throw new PortfolioServiceError("Portfolio not found or not published");
-    }
-
-    if (portfolioError || !portfolioData) {
       throw new PortfolioServiceError("Portfolio not found or not published");
     }
 
@@ -152,7 +177,12 @@ export const getPublicPortfolioByUsername = async (
     );
 
     // Normalize portfolio to ensure migrations are applied
-    return normalizePortfolio(portfolio);
+    const normalizedPortfolio = normalizePortfolio(portfolio);
+    
+    return {
+      portfolio: normalizedPortfolio,
+      userId,
+    };
   } catch (error) {
     if (error instanceof PortfolioServiceError) {
       throw error;

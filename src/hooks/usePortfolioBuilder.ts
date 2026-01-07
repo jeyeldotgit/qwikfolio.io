@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthSession } from "./useAuthSession";
+import { useDebounce } from "./useDebounce";
 import {
   portfolioSchema,
   type Portfolio,
@@ -39,10 +40,16 @@ type PortfolioBuilderErrors = {
   theme?: Record<string, string>;
 };
 
+type AutosaveStatus = "idle" | "saving" | "saved" | "error";
+type SaveStatus = "idle" | "saving" | "saved" | "unsaved";
+
 type UsePortfolioBuilderResult = {
   state: PortfolioBuilderState;
   portfolio: Portfolio | null;
   errors: PortfolioBuilderErrors;
+  autosaveStatus: AutosaveStatus;
+  lastSavedAt: Date | null;
+  saveStatus: SaveStatus;
   updatePersonalInfo: (value: PersonalInfo) => void;
   updateSkills: (value: Skill[]) => void;
   updatePrimaryStack: (value: string[]) => void;
@@ -102,6 +109,12 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     message: null,
     fieldErrors: [],
   });
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const hasUnsavedChanges = useRef(false);
+  const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAutosavingRef = useRef(false);
 
   // Load portfolio on mount
   useEffect(() => {
@@ -120,10 +133,14 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
 
         if (fetchedPortfolio) {
           setPortfolio(fetchedPortfolio);
+          // Set the ref to prevent autosave on initial load
+          previousPortfolioRef.current = JSON.stringify(fetchedPortfolio);
           setState("success");
         } else {
           // No portfolio exists, start with empty
-          setPortfolio(createEmptyPortfolio());
+          const emptyPortfolio = createEmptyPortfolio();
+          setPortfolio(emptyPortfolio);
+          previousPortfolioRef.current = JSON.stringify(emptyPortfolio);
           setState("success");
         }
       } catch (err) {
@@ -132,7 +149,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         setErrors({ message: errorMessage, fieldErrors: [] });
         setState("error");
         // Still allow editing with empty portfolio
-        setPortfolio(createEmptyPortfolio());
+        const emptyPortfolio = createEmptyPortfolio();
+        setPortfolio(emptyPortfolio);
+        previousPortfolioRef.current = JSON.stringify(emptyPortfolio);
         toast({
           variant: "destructive",
           title: "Failed to load portfolio",
@@ -144,12 +163,141 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     loadPortfolio();
   }, [user]);
 
+  // Debounce portfolio changes for autosave (2 seconds delay)
+  const debouncedPortfolio = useDebounce(portfolio, 2000);
+
+  // Track previous portfolio to avoid unnecessary updates
+  const previousPortfolioRef = useRef<string | null>(null);
+
+  // Autosave effect - saves as draft when portfolio changes
+  useEffect(() => {
+    if (!user || !debouncedPortfolio || !hasUnsavedChanges.current) {
+      return;
+    }
+
+    // Skip autosave if portfolio is being loaded initially
+    if (state === "loading") {
+      return;
+    }
+
+    // Create a stable string representation to compare
+    const portfolioString = JSON.stringify(debouncedPortfolio);
+    
+    // Skip if portfolio hasn't actually changed
+    if (previousPortfolioRef.current === portfolioString) {
+      return;
+    }
+
+    // Prevent multiple autosaves from running simultaneously
+    if (isAutosavingRef.current) {
+      return;
+    }
+
+    const performAutosave = async () => {
+      isAutosavingRef.current = true;
+      setAutosaveStatus("saving");
+      setSaveStatus("saving");
+
+      try {
+        // Create a draft version (isPublic = false)
+        const draftPortfolio: Portfolio = {
+          ...debouncedPortfolio,
+          settings: {
+            ...debouncedPortfolio.settings,
+            isPublic: false, // Always save as draft in autosave
+          },
+        };
+
+        // Validate locally first
+        const parsed = portfolioSchema.safeParse(draftPortfolio);
+        if (!parsed.success) {
+          // Don't autosave invalid data
+          setAutosaveStatus("error");
+          setSaveStatus("unsaved");
+          return;
+        }
+
+        const savedPortfolio = await createOrUpdatePortfolio(user.id, draftPortfolio);
+        
+        // Only update portfolio state if the saved data is meaningfully different
+        // Compare only the data that matters (not internal IDs or timestamps)
+        const normalizeForComparison = (p: Portfolio) => {
+          return JSON.stringify({
+            personalInfo: p.personalInfo,
+            skills: p.skills,
+            projects: p.projects,
+            experience: p.experience,
+            education: p.education,
+            certifications: p.certifications,
+            settings: p.settings,
+            theme: p.theme,
+            primaryStack: p.primaryStack,
+          });
+        };
+        
+        const currentNormalized = normalizeForComparison(debouncedPortfolio);
+        const savedNormalized = normalizeForComparison(savedPortfolio);
+        
+        // Only update portfolio state if the saved data is meaningfully different
+        // This prevents unnecessary re-renders that cause duplicate inputs
+        if (savedNormalized !== currentNormalized) {
+          // Use functional update to check against current state before updating
+          setPortfolio((prev) => {
+            if (!prev) return savedPortfolio;
+            
+            // Double-check that we're not setting the same data
+            const prevNormalized = normalizeForComparison(prev);
+            if (prevNormalized === savedNormalized) {
+              return prev; // Return same reference to prevent re-render
+            }
+            
+            return savedPortfolio;
+          });
+          previousPortfolioRef.current = savedNormalized;
+        } else {
+          // Data is the same, just update the ref to prevent re-autosave
+          // Don't update portfolio state to avoid re-renders
+          previousPortfolioRef.current = portfolioString;
+        }
+        
+        setLastSavedAt(new Date());
+        setAutosaveStatus("saved");
+        setSaveStatus("saved");
+        hasUnsavedChanges.current = false;
+
+        // Reset to idle after 3 seconds
+        if (autosaveTimeoutRef.current) {
+          clearTimeout(autosaveTimeoutRef.current);
+        }
+        autosaveTimeoutRef.current = setTimeout(() => {
+          setAutosaveStatus("idle");
+          setSaveStatus("idle");
+        }, 3000);
+      } catch (error) {
+        console.error("Autosave failed:", error);
+        setAutosaveStatus("error");
+        setSaveStatus("unsaved");
+        toast({
+          variant: "destructive",
+          title: "Autosave failed",
+          description: "Your changes weren't saved automatically. Please save manually.",
+        });
+      } finally {
+        isAutosavingRef.current = false;
+      }
+    };
+
+    performAutosave();
+  }, [debouncedPortfolio, user, state, toast]);
+
   const updatePersonalInfo = (value: PersonalInfo) => {
     if (!portfolio) return;
     setPortfolio((prev) => ({
       ...prev!,
       personalInfo: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear personalInfo errors when user starts typing
     if (errors.personalInfo) {
       setErrors((prev) => ({
@@ -165,6 +313,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       skills: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear skills errors when user adds a skill
     if (errors.skills) {
       setErrors((prev) => ({
@@ -180,6 +330,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       primaryStack: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
   };
 
   const updateProjects = (value: Project[]) => {
@@ -188,6 +340,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       projects: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear projects errors when user modifies projects
     if (errors.projects && Object.keys(errors.projects).length > 0) {
       setErrors((prev) => ({
@@ -203,6 +357,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       experience: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear experience errors when user modifies experience
     if (errors.experience && Object.keys(errors.experience).length > 0) {
       setErrors((prev) => ({
@@ -218,6 +374,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       education: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear education errors when user modifies education
     if (errors.education && Object.keys(errors.education).length > 0) {
       setErrors((prev) => ({
@@ -233,6 +391,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       certifications: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear certifications errors when user modifies certifications
     if (errors.certifications && Object.keys(errors.certifications).length > 0) {
       setErrors((prev) => ({
@@ -248,6 +408,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       settings: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear settings errors when user modifies settings
     if (errors.settings && Object.keys(errors.settings).length > 0) {
       setErrors((prev) => ({
@@ -263,6 +425,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       theme: value,
     }));
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
     // Clear theme errors when user modifies theme
     if (errors.theme && Object.keys(errors.theme).length > 0) {
       setErrors((prev) => ({
@@ -376,6 +540,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       const savedPortfolio = await createOrUpdatePortfolio(user.id, portfolio);
       setPortfolio(savedPortfolio);
       setState("success");
+      setLastSavedAt(new Date());
+      hasUnsavedChanges.current = false;
+      setSaveStatus("saved");
       toast({
         variant: "success",
         title: "Portfolio saved!",
@@ -398,6 +565,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     state,
     portfolio,
     errors,
+    autosaveStatus,
+    lastSavedAt,
+    saveStatus,
     updatePersonalInfo,
     updateSkills,
     updatePrimaryStack,

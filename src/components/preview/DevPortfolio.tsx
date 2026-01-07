@@ -1,9 +1,25 @@
 import { useEffect, useMemo } from "react";
 import type { Portfolio, SocialLink } from "@/schemas/portfolio";
-import { Github, Linkedin, Globe, Mail, ExternalLink, Twitter, Briefcase, MapPin, Star, Video, Award } from "lucide-react";
+import {
+  Github,
+  Linkedin,
+  Globe,
+  Mail,
+  ExternalLink,
+  Twitter,
+  Briefcase,
+  MapPin,
+  Star,
+  Video,
+  Award,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { cn } from "@/lib/utils";
 import { applyTheme } from "@/lib/theme-utils";
+import {
+  trackSocialLinkClick,
+  trackProjectView,
+} from "@/services/analytics/analyticsService";
 
 type DevPortfolioProps = {
   portfolio: Portfolio;
@@ -38,7 +54,7 @@ const SocialLink = ({
     href={href}
     target="_blank"
     rel="noreferrer"
-                    className="group flex items-center gap-2 text-slate-500 dark:text-slate-400 transition-colors duration-300 hover:[color:var(--portfolio-primary)] dark:hover:[color:var(--portfolio-primary-dark)]"
+    className="group flex items-center gap-2 text-slate-500 dark:text-slate-400 transition-colors duration-300 hover:[color:var(--portfolio-primary)] dark:hover:[color:var(--portfolio-primary-dark)]"
     aria-label={label}
   >
     <Icon className="h-4 w-4" />
@@ -61,8 +77,19 @@ const getSocialLinkLabel = (type: SocialLink["type"]): string => {
 };
 
 export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
-  const { personalInfo, skills, projects, experience, education, certifications, primaryStack, theme } = portfolio;
-  
+  const {
+    personalInfo,
+    skills,
+    projects,
+    experience,
+    education,
+    certifications,
+    primaryStack,
+    theme,
+    settings,
+  } = portfolio;
+  const slug = settings?.slug || null;
+
   // Apply theme on mount and when theme changes
   useEffect(() => {
     applyTheme(theme);
@@ -75,16 +102,19 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
 
   // Get theme color classes based on primary color
   const themeColors = useMemo(() => {
-    const colorMap: Record<string, {
-      text: string;
-      textDark: string;
-      bg: string;
-      bgDark: string;
-      border: string;
-      borderDark: string;
-      badge: string;
-      badgeDark: string;
-    }> = {
+    const colorMap: Record<
+      string,
+      {
+        text: string;
+        textDark: string;
+        bg: string;
+        bgDark: string;
+        border: string;
+        borderDark: string;
+        badge: string;
+        badgeDark: string;
+      }
+    > = {
       emerald: {
         text: "text-emerald-600",
         textDark: "dark:text-emerald-400",
@@ -138,7 +168,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
     };
     return radiusMap[theme.radius] || radiusMap.md;
   }, [theme.radius]);
-  
+
   // Group skills by category
   const skillsByCategory = skills.reduce((acc, skill) => {
     const category = skill.category;
@@ -148,33 +178,46 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
     acc[category].push(skill);
     return acc;
   }, {} as Record<string, typeof skills>);
-  
+
   // Sort projects by order, then by featured
   const sortedProjects = [...projects].sort((a, b) => {
     if (a.featured && !b.featured) return -1;
     if (!a.featured && b.featured) return 1;
     return (a.order || 0) - (b.order || 0);
   });
-  
+
   // Use profilePhotoUrl if available, otherwise fall back to avatar prop
   const profilePhoto = personalInfo.profilePhotoUrl || avatar;
-  
+
   // Build headline with role level if available
   const headlineWithRole = personalInfo.roleLevel
-    ? `${personalInfo.roleLevel.charAt(0).toUpperCase() + personalInfo.roleLevel.slice(1)} ${personalInfo.headline}`
+    ? `${
+        personalInfo.roleLevel.charAt(0).toUpperCase() +
+        personalInfo.roleLevel.slice(1)
+      } ${personalInfo.headline}`
     : personalInfo.headline;
-  
+
   // Get availability badge text
   const getAvailabilityBadge = () => {
     if (!personalInfo.availability) return null;
     const badges = {
-      open_to_work: { text: "Open to Work", class: `${themeColors.badge} ${themeColors.badgeDark}` },
-      freelance: { text: "Available for Freelance", class: "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400" },
-      not_open: { text: "Not Open to Opportunities", class: "bg-slate-500/10 text-slate-600 dark:text-slate-400" },
+      open_to_work: {
+        text: "Open to Work",
+        class: `${themeColors.badge} ${themeColors.badgeDark}`,
+      },
+      freelance: {
+        text: "Available for Freelance",
+        class:
+          "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400",
+      },
+      not_open: {
+        text: "Not Open to Opportunities",
+        class: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+      },
     };
     return badges[personalInfo.availability];
   };
-  
+
   const availabilityBadge = getAvailabilityBadge();
 
   return (
@@ -195,26 +238,43 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
               {/* Mobile Avatar - shown on smaller screens */}
               <div className="flex items-center gap-4 lg:hidden">
                 <div className="relative h-20 w-20 shrink-0 sm:h-24 sm:w-24">
-                  <div 
+                  <div
                     className="absolute inset-0 rounded-xl opacity-10 blur-lg dark:opacity-20"
                     style={{
                       background: `linear-gradient(to bottom right, var(--portfolio-primary), var(--portfolio-primary-dark))`,
                     }}
                   />
-                  <div className={cn("relative h-full w-full overflow-hidden border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80", radiusClasses)}>
+                  <div
+                    className={cn(
+                      "relative h-full w-full overflow-hidden border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80",
+                      radiusClasses
+                    )}
+                  >
                     <Avatar className="h-full w-full">
                       <AvatarImage
                         src={profilePhoto}
                         className="h-full w-full object-cover"
                       />
-                      <AvatarFallback className={cn("flex h-full w-full items-center justify-center text-3xl font-bold", themeColors.text, themeColors.textDark)}>
+                      <AvatarFallback
+                        className={cn(
+                          "flex h-full w-full items-center justify-center text-3xl font-bold",
+                          themeColors.text,
+                          themeColors.textDark
+                        )}
+                      >
                         {(personalInfo.name || "U")[0]}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                 </div>
                 <div>
-                  <p className={cn("font-mono text-xs tracking-wider", themeColors.text, themeColors.textDark)}>
+                  <p
+                    className={cn(
+                      "font-mono text-xs tracking-wider",
+                      themeColors.text,
+                      themeColors.textDark
+                    )}
+                  >
                     {"<hello world />"}
                   </p>
                   <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -227,7 +287,13 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
 
               {/* Desktop Name - hidden on mobile (shown in mobile avatar section) */}
               <div className="hidden space-y-2 lg:block">
-                <p className={cn("font-mono text-sm tracking-wider", themeColors.text, themeColors.textDark)}>
+                <p
+                  className={cn(
+                    "font-mono text-sm tracking-wider",
+                    themeColors.text,
+                    themeColors.textDark
+                  )}
+                >
                   {"<hello world />"}
                 </p>
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
@@ -249,7 +315,9 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   </div>
                 )}
                 {availabilityBadge && (
-                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${availabilityBadge.class}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${availabilityBadge.class}`}
+                  >
                     {availabilityBadge.text}
                   </span>
                 )}
@@ -279,21 +347,31 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   />
                 )}
                 {/* New socialLinks array */}
-                {personalInfo.socialLinks && personalInfo.socialLinks.length > 0 && personalInfo.socialLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex items-center gap-2 text-slate-500 dark:text-slate-400 transition-colors duration-300 hover:[color:var(--portfolio-primary)] dark:hover:[color:var(--portfolio-primary-dark)]"
-                    aria-label={getSocialLinkLabel(link.type)}
-                  >
-                    <SocialLinkIcon type={link.type} />
-                    <span className="text-sm font-medium">{getSocialLinkLabel(link.type)}</span>
-                  </a>
-                ))}
+                {personalInfo.socialLinks &&
+                  personalInfo.socialLinks.length > 0 &&
+                  personalInfo.socialLinks.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-2 text-slate-500 dark:text-slate-400 transition-colors duration-300 hover:[color:var(--portfolio-primary)] dark:hover:[color:var(--portfolio-primary-dark)]"
+                      aria-label={getSocialLinkLabel(link.type)}
+                      onClick={() => {
+                        if (slug) {
+                          trackSocialLinkClick(slug, link.type);
+                        }
+                      }}
+                    >
+                      <SocialLinkIcon type={link.type} />
+                      <span className="text-sm font-medium">
+                        {getSocialLinkLabel(link.type)}
+                      </span>
+                    </a>
+                  ))}
                 {/* Legacy github/linkedin for backward compatibility */}
-                {(!personalInfo.socialLinks || personalInfo.socialLinks.length === 0) && (
+                {(!personalInfo.socialLinks ||
+                  personalInfo.socialLinks.length === 0) && (
                   <>
                     {personalInfo.github && (
                       <SocialLink
@@ -318,20 +396,31 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
             {portfolio.theme?.showProfilePhoto !== false && (
               <div className="hidden lg:block">
                 <div className="relative h-48 w-48">
-                  <div 
+                  <div
                     className="absolute inset-0 opacity-10 blur-xl dark:opacity-20"
                     style={{
                       borderRadius: "var(--portfolio-radius)",
                       background: `linear-gradient(to bottom right, var(--portfolio-primary), var(--portfolio-primary-dark))`,
                     }}
                   />
-                  <div className={cn("relative h-full w-full overflow-hidden border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80", radiusClasses)}>
+                  <div
+                    className={cn(
+                      "relative h-full w-full overflow-hidden border border-slate-200 bg-white/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80",
+                      radiusClasses
+                    )}
+                  >
                     <Avatar className="h-full w-full">
                       <AvatarImage
                         src={profilePhoto}
                         className="h-full w-full object-cover"
                       />
-                      <AvatarFallback className={cn("flex h-full w-full items-center justify-center text-6xl font-bold", themeColors.text, themeColors.textDark)}>
+                      <AvatarFallback
+                        className={cn(
+                          "flex h-full w-full items-center justify-center text-6xl font-bold",
+                          themeColors.text,
+                          themeColors.textDark
+                        )}
+                      >
                         {(personalInfo.name || "U")[0]}
                       </AvatarFallback>
                     </Avatar>
@@ -349,7 +438,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
           <h2 className="mb-8 font-mono text-sm tracking-wider text-slate-400 dark:text-slate-500">
             {"// tech_stack"}
           </h2>
-          
+
           {/* Primary Stack */}
           {primaryStack && primaryStack.length > 0 && (
             <div className="mb-8">
@@ -357,7 +446,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                 Primary Stack
               </h3>
               <div className="flex flex-wrap gap-3">
-                  {primaryStack.map((skillName) => {
+                {primaryStack.map((skillName) => {
                   const skill = skills.find((s) => s.name === skillName);
                   if (!skill) return null;
                   return (
@@ -371,7 +460,6 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         borderColor: `var(--portfolio-primary)`,
                         borderWidth: "2px",
                         borderStyle: "solid",
-                        borderOpacity: 0.5,
                         backgroundColor: `rgba(var(--portfolio-primary-rgb), 0.05)`,
                         color: `var(--portfolio-primary)`,
                       }}
@@ -385,7 +473,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       }}
                     >
                       <span className="relative z-10 flex items-center gap-1.5">
-                        <Star 
+                        <Star
                           className="h-3.5 w-3.5"
                           style={{
                             fill: "var(--portfolio-primary)",
@@ -400,69 +488,81 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
               </div>
             </div>
           )}
-          
+
           {/* Skills by Category */}
-          {Object.entries(skillsByCategory).map(([category, categorySkills]) => (
-            <div key={category} className="mb-6 last:mb-0">
-              <h3 className="mb-3 text-sm font-semibold capitalize text-slate-700 dark:text-slate-300">
-                {category.replace("_", " ")}
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {categorySkills.map((skill, idx) => {
-                  const isPrimary = primaryStack?.includes(skill.name);
-                  return (
-                    <span
-                      key={skill.name}
-                      className={cn(
-                        "group relative overflow-hidden rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300",
-                        isPrimary
-                          ? cn(
-                              radiusClasses,
-                              "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/50"
-                            )
-                          : cn(
-                              radiusClasses,
-                              "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
-                            )
-                      )}
-                      style={{
-                        ...(isPrimary ? {
-                          borderColor: `var(--portfolio-primary)`,
-                          borderWidth: "1px",
-                          borderStyle: "solid",
-                          borderOpacity: 0.5,
-                          backgroundColor: `rgba(var(--portfolio-primary-rgb), 0.05)`,
-                          color: `var(--portfolio-primary)`,
-                        } : {}),
-                        animationDelay: `${idx * 50}ms`,
-                      }}
-                      onMouseEnter={isPrimary ? (e) => {
-                        e.currentTarget.style.borderOpacity = "1";
-                        e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.1)`;
-                      } : undefined}
-                      onMouseLeave={isPrimary ? (e) => {
-                        e.currentTarget.style.borderOpacity = "0.5";
-                        e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.05)`;
-                      } : undefined}
-                    >
-                      <span className="relative z-10">{skill.name}</span>
-                      {skill.level && (
-                        <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
-                          ({skill.level})
-                        </span>
-                      )}
-                      <div 
-                        className="absolute inset-0 -z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          {Object.entries(skillsByCategory).map(
+            ([category, categorySkills]) => (
+              <div key={category} className="mb-6 last:mb-0">
+                <h3 className="mb-3 text-sm font-semibold capitalize text-slate-700 dark:text-slate-300">
+                  {category.replace("_", " ")}
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {categorySkills.map((skill, idx) => {
+                    const isPrimary = primaryStack?.includes(skill.name);
+                    return (
+                      <span
+                        key={skill.name}
+                        className={cn(
+                          "group relative overflow-hidden rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300",
+                          isPrimary
+                            ? cn(
+                                radiusClasses,
+                                "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900/50"
+                              )
+                            : cn(
+                                radiusClasses,
+                                "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300"
+                              )
+                        )}
                         style={{
-                          background: `linear-gradient(to right, var(--portfolio-primary)/5, var(--portfolio-primary-dark)/5)`,
+                          ...(isPrimary
+                            ? {
+                                borderColor: `var(--portfolio-primary)`,
+                                borderWidth: "1px",
+                                borderStyle: "solid",
+                                borderOpacity: 0.5,
+                                backgroundColor: `rgba(var(--portfolio-primary-rgb), 0.05)`,
+                                color: `var(--portfolio-primary)`,
+                              }
+                            : {}),
+                          animationDelay: `${idx * 50}ms`,
                         }}
-                      />
-                    </span>
-                  );
-                })}
+                        onMouseEnter={
+                          isPrimary
+                            ? (e) => {
+                                e.currentTarget.style.borderOpacity = "1";
+                                e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.1)`;
+                              }
+                            : undefined
+                        }
+                        onMouseLeave={
+                          isPrimary
+                            ? (e) => {
+                                e.currentTarget.style.borderOpacity = "0.5";
+                                e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.05)`;
+                              }
+                            : undefined
+                        }
+                      >
+                        <span className="relative z-10">{skill.name}</span>
+                        {skill.level && (
+                          <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                            ({skill.level})
+                          </span>
+                        )}
+                        <div
+                          className="absolute inset-0 -z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                          style={{
+                            background: `linear-gradient(to right, var(--portfolio-primary)/5, var(--portfolio-primary-dark)/5)`,
+                          }}
+                        />
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </section>
 
@@ -477,7 +577,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
               <article
                 key={project.id ?? project.name}
                 className={cn(
-                  "group relative overflow-hidden border p-6 transition-all duration-500 hover:shadow-lg",
+                  "group relative overflow-hidden border p-6 transition-all duration-500 hover:shadow-lg cursor-pointer",
                   radiusClasses,
                   project.featured
                     ? cn(
@@ -487,10 +587,15 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       )
                     : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 dark:hover:border-slate-700 dark:hover:bg-slate-900/80"
                 )}
+                onClick={() => {
+                  if (slug && project.id) {
+                    trackProjectView(slug, project.id);
+                  }
+                }}
               >
                 {/* Featured Badge */}
                 {project.featured && (
-                  <div 
+                  <div
                     className="absolute right-6 top-6 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
                     style={{
                       backgroundColor: `var(--portfolio-primary)`,
@@ -498,7 +603,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       color: `var(--portfolio-primary)`,
                     }}
                   >
-                    <Star 
+                    <Star
                       className="h-3 w-3"
                       style={{
                         fill: "var(--portfolio-primary)",
@@ -531,7 +636,8 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                               alt={`${project.name} preview ${mIdx + 1}`}
                               className="h-full w-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
                               }}
                             />
                           ) : (
@@ -546,15 +652,16 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
 
                   <div>
                     <div className="flex items-start justify-between gap-2">
-                      <h3 
-                      className="text-xl font-bold text-slate-900 transition-colors duration-300 dark:text-white"
-                      style={{
-                        color: "var(--portfolio-primary)",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "var(--portfolio-primary)";
-                      }}
-                    >
+                      <h3
+                        className="text-xl font-bold text-slate-900 transition-colors duration-300 dark:text-white"
+                        style={{
+                          color: "var(--portfolio-primary)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color =
+                            "var(--portfolio-primary)";
+                        }}
+                      >
                         {project.name}
                       </h3>
                     </div>
@@ -576,7 +683,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                           key={hIdx}
                           className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                         >
-                          <span 
+                          <span
                             className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                             style={{
                               backgroundColor: "var(--portfolio-primary)",
@@ -642,7 +749,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                 </div>
 
                 {/* Hover gradient */}
-                <div 
+                <div
                   className="absolute inset-x-0 bottom-0 h-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                   style={{
                     background: `linear-gradient(to right, transparent, var(--portfolio-primary), transparent)`,
@@ -663,7 +770,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
             </h2>
             <div className="relative space-y-8">
               {/* Timeline line */}
-              <div 
+              <div
                 className="absolute bottom-0 left-[7px] top-2 w-px bg-gradient-to-b via-slate-300 to-transparent dark:via-slate-700"
                 style={{
                   background: `linear-gradient(to bottom, var(--portfolio-primary), rgb(203 213 225), transparent)`,
@@ -676,7 +783,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   className="relative pl-8"
                 >
                   {/* Timeline dot */}
-                  <div 
+                  <div
                     className="absolute left-0 top-2 h-3.5 w-3.5 rounded-full border-2 bg-white dark:bg-slate-950"
                     style={{
                       borderColor: "var(--portfolio-primary)",
@@ -691,7 +798,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       <span className="text-slate-400 dark:text-slate-500">
                         @
                       </span>
-                      <span 
+                      <span
                         className="font-medium"
                         style={{
                           color: "var(--portfolio-primary)",
@@ -707,7 +814,9 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       </p>
                       {exp.location && (
                         <>
-                          <span className="text-slate-300 dark:text-slate-700">•</span>
+                          <span className="text-slate-300 dark:text-slate-700">
+                            •
+                          </span>
                           <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                             <MapPin className="h-3 w-3" />
                             {exp.location}
@@ -716,7 +825,9 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                       )}
                       {exp.employmentType && (
                         <>
-                          <span className="text-slate-300 dark:text-slate-700">•</span>
+                          <span className="text-slate-300 dark:text-slate-700">
+                            •
+                          </span>
                           <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">
                             {exp.employmentType.replace("_", "-")}
                           </span>
@@ -757,8 +868,11 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/30"
                 >
                   <div className="flex items-start gap-4">
-                    <div 
-                      className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-mono text-sm font-bold dark:bg-slate-800", radiusClasses)}
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-mono text-sm font-bold dark:bg-slate-800",
+                        radiusClasses
+                      )}
                       style={{
                         color: "var(--portfolio-primary)",
                       }}
@@ -779,7 +893,9 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         </p>
                         {edu.gpa && (
                           <>
-                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-slate-300 dark:text-slate-700">
+                              •
+                            </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
                               GPA: {edu.gpa.toFixed(2)}
                             </span>
@@ -787,7 +903,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         )}
                       </div>
                       {edu.honors && (
-                        <p 
+                        <p
                           className="text-xs font-medium"
                           style={{
                             color: "var(--portfolio-primary)",
@@ -841,13 +957,16 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                   className="group rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-emerald-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/30 dark:hover:border-emerald-500"
                 >
                   <div className="flex items-start gap-3">
-                    <div 
-                      className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", radiusClasses)}
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                        radiusClasses
+                      )}
                       style={{
                         backgroundColor: `rgba(var(--portfolio-primary-rgb), 0.1)`,
                       }}
                     >
-                      <Award 
+                      <Award
                         className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400"
                         style={{
                           color: "var(--portfolio-primary, #10b981)",
@@ -871,7 +990,9 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         </p>
                         {cert.expiryDate && (
                           <>
-                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-slate-300 dark:text-slate-700">
+                              •
+                            </span>
                             <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
                               Expires: {cert.expiryDate}
                             </p>
@@ -917,7 +1038,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
         <div className="mx-auto max-w-6xl px-6 text-center">
           <p className="font-mono text-xs text-slate-400 dark:text-slate-600">
             Built with{" "}
-            <span 
+            <span
               style={{
                 color: "var(--portfolio-primary)",
               }}

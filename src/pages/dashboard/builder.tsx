@@ -21,6 +21,9 @@ const DashboardBuilderPage = () => {
     state,
     portfolio,
     errors,
+    autosaveStatus,
+    lastSavedAt,
+    saveStatus,
     updatePersonalInfo,
     updateSkills,
     updatePrimaryStack,
@@ -33,10 +36,7 @@ const DashboardBuilderPage = () => {
     handleSave,
   } = usePortfolioBuilder();
 
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [activeSection, setActiveSection] = useState("personal");
-  const hasUnsavedChanges = useRef(false);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isLoading = state === "loading";
   const isSaving = state === "loading" && portfolio !== null;
@@ -53,19 +53,10 @@ const DashboardBuilderPage = () => {
     theme: useRef<HTMLDivElement>(null),
   };
 
-  // Track unsaved changes
-  useEffect(() => {
-    if (portfolio && state === "success") {
-      hasUnsavedChanges.current = true;
-      setSaveStatus("unsaved");
-    }
-  }, [portfolio, state]);
-
-  // Handle save with status updates
+  // Handle save with error scrolling
   const handleSaveWithStatus = useCallback(async () => {
     if (isSaving) return;
 
-    setSaveStatus("saving");
     await handleSave();
 
     // If there are validation errors, scroll to the first error
@@ -93,18 +84,7 @@ const DashboardBuilderPage = () => {
         });
         setActiveSection(sectionKey);
       }
-    } else {
-      setSaveStatus("saved");
-      hasUnsavedChanges.current = false;
     }
-
-    // Reset to idle after 2 seconds
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => {
-      setSaveStatus("idle");
-    }, 2000);
   }, [handleSave, isSaving, errors.fieldErrors]);
 
   // Keyboard shortcuts
@@ -124,7 +104,7 @@ const DashboardBuilderPage = () => {
   // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges.current && saveStatus === "unsaved") {
+      if (saveStatus === "unsaved") {
         e.preventDefault();
         e.returnValue = "";
       }
@@ -187,6 +167,8 @@ const DashboardBuilderPage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <BuilderHeader
         saveStatus={saveStatus}
+        autosaveStatus={autosaveStatus}
+        lastSavedAt={lastSavedAt}
         onSave={handleSaveWithStatus}
         onPreview={handlePreview}
         isSaving={isSaving}

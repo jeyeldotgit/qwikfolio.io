@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { Portfolio } from "@/schemas/portfolio";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -44,6 +45,22 @@ const DashboardPage = () => {
   const [statusOverride, setStatusOverride] = useState<
     "draft" | "published" | null
   >(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+
+  // Load portfolio for completion badge
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      if (user?.id && portfolioExists) {
+        try {
+          const portfolioData = await getPortfolio(user.id);
+          setPortfolio(portfolioData);
+        } catch (error) {
+          console.error("Failed to load portfolio for completion:", error);
+        }
+      }
+    };
+    loadPortfolio();
+  }, [user?.id, portfolioExists]);
 
   const handleCreatePortfolio = () => {
     navigate("/dashboard/builder");
@@ -52,7 +69,10 @@ const DashboardPage = () => {
   const handleViewPortfolio = () => {
     const effectiveStatus = statusOverride ?? stats?.status;
     if (effectiveStatus === "published" && profile?.username) {
-      const publicUrl = `${window.location.origin}/${profile.username}`;
+      // Use portfolio slug if available (stored in settings.slug), otherwise fall back to username
+      const portfolioSlug = portfolio?.settings?.slug;
+      const identifier = portfolioSlug || profile.username;
+      const publicUrl = `${window.location.origin}/${identifier}`;
       window.open(publicUrl, "_blank");
     } else {
       navigate("/dashboard/preview");
@@ -207,9 +227,17 @@ const DashboardPage = () => {
   }
 
   const effectiveStatus = statusOverride ?? stats.status;
-  const publicUrl = profile?.username
-    ? `${window.location.origin}/${profile.username}`
-    : undefined;
+  
+  // Construct public URL: use portfolio slug if available, otherwise fall back to username
+  const publicUrl = (() => {
+    if (!profile?.username) return undefined;
+    
+    // Check if portfolio has a custom slug (stored in settings.slug)
+    const portfolioSlug = portfolio?.settings?.slug;
+    const identifier = portfolioSlug || profile.username;
+    
+    return `${window.location.origin}/${identifier}`;
+  })();
 
   // Format last viewed
   const formatLastViewed = (dateStr: string | null) => {
@@ -239,7 +267,7 @@ const DashboardPage = () => {
             </span>
           </button>
           <div className="flex items-center gap-3">
-            <CompletionBadge status={effectiveStatus} />
+            <CompletionBadge portfolio={portfolio} />
             <ThemeToggle />
             <ProfileMenu
               displayName={profile?.full_name ?? user?.email ?? null}

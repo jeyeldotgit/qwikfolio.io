@@ -53,9 +53,12 @@ export const CertificationsForm = ({
       className={className}
     >
       <div className="space-y-6">
-        {value.map((cert, index) => (
+        {value.map((cert, index) => {
+          // Create a stable key that doesn't change on re-render
+          const stableKey = cert.id ?? `cert-${index}-${cert.name || cert.issuer || cert.issueDate || 'new'}`;
+          return (
           <FormSection
-            key={cert.id ?? index}
+            key={stableKey}
             title={`Certification ${index + 1}`}
           >
             <div className="space-y-4">
@@ -225,7 +228,8 @@ export const CertificationsForm = ({
               </div>
             </div>
           </FormSection>
-        ))}
+          );
+        })}
 
         <div className="flex justify-start">
           <Button

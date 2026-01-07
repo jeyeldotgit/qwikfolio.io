@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPublicPortfolioByUsername } from "@/services/portfolio/portfolioService";
-import { getProfileByUsername } from "@/services/profile/profileService";
+import { getProfile } from "@/services/profile/profileService";
 import {
   trackPortfolioView,
   trackResumeDownload,
@@ -38,16 +38,19 @@ const PublicPortfolioPage = () => {
       setError(null);
 
       try {
-        const data = await getPublicPortfolioByUsername(username);
-        if (data) {
-          setPortfolio(data);
+        const result = await getPublicPortfolioByUsername(username);
+        if (result) {
+          const { portfolio, userId } = result;
+          setPortfolio(portfolio);
 
-          // Fetch the portfolio owner's profile (not the logged-in user's)
-          const ownerProfile = await getProfileByUsername(username);
+          // Fetch the portfolio owner's profile by userId (works for both username and slug)
+          const ownerProfile = await getProfile(userId);
           if (ownerProfile?.id) {
             setProfileId(ownerProfile.id);
             setAvatarUrl(ownerProfile.avatar_url ?? "");
-            await trackPortfolioView(ownerProfile.id);
+            // Track view with slug if available
+            const slug = portfolio.settings?.slug || null;
+            await trackPortfolioView(slug, ownerProfile.id);
           }
         } else {
           setError("Portfolio not found");

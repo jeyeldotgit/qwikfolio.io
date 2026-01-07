@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Plus, X } from "lucide-react";
 
 type EducationFormProps = {
   value: Education[];
@@ -40,6 +41,9 @@ export const EducationForm = ({
         endDate: "",
         current: false,
         description: "",
+        gpa: undefined,
+        coursework: [],
+        honors: "",
       },
     ]);
   };
@@ -162,6 +166,107 @@ export const EducationForm = ({
                     }
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-gpa-${index}`}>
+                    GPA (optional)
+                  </Label>
+                  <Input
+                    id={`edu-gpa-${index}`}
+                    type="number"
+                    min="0"
+                    max="4.0"
+                    step="0.01"
+                    placeholder="e.g., 3.8"
+                    value={edu.gpa ?? ""}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        gpa: event.target.value
+                          ? parseFloat(event.target.value)
+                          : undefined,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`edu-honors-${index}`}>
+                    Honors (optional)
+                  </Label>
+                  <Input
+                    id={`edu-honors-${index}`}
+                    placeholder="e.g., Summa Cum Laude"
+                    value={edu.honors ?? ""}
+                    onChange={(event) =>
+                      handleEducationChange(index, {
+                        ...edu,
+                        honors: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Coursework */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Coursework (optional)</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const coursework = edu.coursework || [];
+                      handleEducationChange(index, {
+                        ...edu,
+                        coursework: [...coursework, ""],
+                      });
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Course
+                  </Button>
+                </div>
+                {(edu.coursework || []).map((course, cIndex) => (
+                  <div key={cIndex} className="flex gap-2">
+                    <Input
+                      placeholder="e.g., Data Structures and Algorithms"
+                      value={course}
+                      onChange={(event) => {
+                        const coursework = [...(edu.coursework || [])];
+                        coursework[cIndex] = event.target.value;
+                        handleEducationChange(index, {
+                          ...edu,
+                          coursework,
+                        });
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const coursework = (edu.coursework || []).filter(
+                          (_, idx) => idx !== cIndex
+                        );
+                        handleEducationChange(index, {
+                          ...edu,
+                          coursework,
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {(!edu.coursework || edu.coursework.length === 0) && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Add relevant coursework or courses
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

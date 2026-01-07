@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Plus, X } from "lucide-react";
 
 type ExperienceFormProps = {
   value: Experience[];
@@ -39,6 +40,9 @@ export const ExperienceForm = ({
         endDate: "",
         current: false,
         description: "",
+        location: "",
+        employmentType: undefined,
+        achievements: [],
       },
     ]);
   };
@@ -68,7 +72,10 @@ export const ExperienceForm = ({
                         company: event.target.value,
                       })
                     }
-                    className={cn(errors[index]?.company && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    className={cn(
+                      errors[index]?.company &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
                   />
                   {errors[index]?.company && (
                     <p className="text-xs text-red-600 dark:text-red-400">
@@ -90,13 +97,60 @@ export const ExperienceForm = ({
                         role: event.target.value,
                       })
                     }
-                    className={cn(errors[index]?.role && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    className={cn(
+                      errors[index]?.role &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
                   />
                   {errors[index]?.role && (
                     <p className="text-xs text-red-600 dark:text-red-400">
                       {errors[index].role}
                     </p>
                   )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`exp-location-${index}`}>
+                    Location (optional)
+                  </Label>
+                  <Input
+                    id={`exp-location-${index}`}
+                    placeholder="e.g., San Francisco, CA"
+                    value={exp.location ?? ""}
+                    onChange={(event) =>
+                      handleExperienceChange(index, {
+                        ...exp,
+                        location: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`exp-employment-type-${index}`}>
+                    Employment Type
+                  </Label>
+                  <select
+                    id={`exp-employment-type-${index}`}
+                    value={exp.employmentType ?? ""}
+                    onChange={(event) =>
+                      handleExperienceChange(index, {
+                        ...exp,
+                        employmentType: event.target.value
+                          ? (event.target.value as Experience["employmentType"])
+                          : undefined,
+                      })
+                    }
+                    className={cn(
+                      "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    )}
+                  >
+                    <option value="">Select type...</option>
+                    <option value="full_time">Full-time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                  </select>
                 </div>
               </div>
 
@@ -115,7 +169,10 @@ export const ExperienceForm = ({
                         startDate: event.target.value,
                       })
                     }
-                    className={cn(errors[index]?.startDate && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                    className={cn(
+                      errors[index]?.startDate &&
+                        "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    )}
                   />
                   {errors[index]?.startDate && (
                     <p className="text-xs text-red-600 dark:text-red-400">
@@ -162,23 +219,87 @@ export const ExperienceForm = ({
                 </Label>
               </div>
 
+              {/* Achievements */}
               <div className="space-y-2">
-                <Label htmlFor={`exp-description-${index}`} required>
-                  Description
+                <div className="flex items-center justify-between">
+                  <Label>Achievements</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const achievements = exp.achievements || [];
+                      handleExperienceChange(index, {
+                        ...exp,
+                        achievements: [...achievements, ""],
+                      });
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Achievement
+                  </Button>
+                </div>
+                {(exp.achievements || []).map((achievement, aIndex) => (
+                  <div key={aIndex} className="flex gap-2">
+                    <Input
+                      placeholder="e.g., Increased user engagement by 40%"
+                      value={achievement}
+                      onChange={(event) => {
+                        const achievements = [...(exp.achievements || [])];
+                        achievements[aIndex] = event.target.value;
+                        handleExperienceChange(index, {
+                          ...exp,
+                          achievements,
+                        });
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const achievements = (exp.achievements || []).filter(
+                          (_, idx) => idx !== aIndex
+                        );
+                        handleExperienceChange(index, {
+                          ...exp,
+                          achievements,
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {(!exp.achievements || exp.achievements.length === 0) && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Add key achievements or impact metrics for this role
+                  </p>
+                )}
+              </div>
+
+              {/* Description (optional, for backward compatibility) */}
+              <div className="space-y-2">
+                <Label htmlFor={`exp-description-${index}`}>
+                  Description (optional)
                 </Label>
                 <TextareaWithCounter
                   id={`exp-description-${index}`}
                   rows={3}
                   maxLength={400}
-                  placeholder="What did you own and ship in this role?"
-                  value={exp.description}
+                  placeholder="Additional context or details about this role..."
+                  value={exp.description ?? ""}
                   onChange={(event) =>
                     handleExperienceChange(index, {
                       ...exp,
                       description: event.target.value,
                     })
                   }
-                  className={cn(errors[index]?.description && "border-red-500 focus:border-red-500 focus:ring-red-500")}
+                  className={cn(
+                    errors[index]?.description &&
+                      "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  )}
                 />
                 {errors[index]?.description && (
                   <p className="text-xs text-red-600 dark:text-red-400">

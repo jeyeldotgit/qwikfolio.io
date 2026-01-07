@@ -5,6 +5,9 @@ import {
   FolderKanban,
   Briefcase,
   GraduationCap,
+  Award,
+  Settings,
+  Palette,
   Check,
 } from "lucide-react";
 import type { Portfolio } from "@/schemas/portfolio";
@@ -55,6 +58,28 @@ const SECTIONS: Section[] = [
     isComplete: (p) =>
       (p.education?.length ?? 0) > 0 &&
       (p.education ?? []).every((edu) => edu.school && edu.degree && edu.field),
+  },
+  {
+    id: "certifications",
+    label: "Certifications",
+    icon: Award,
+    isComplete: (p) =>
+      (p.certifications?.length ?? 0) > 0 &&
+      (p.certifications ?? []).every(
+        (cert) => cert.name && cert.issuer && cert.issueDate
+      ),
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    isComplete: (p) => Boolean(p.settings),
+  },
+  {
+    id: "theme",
+    label: "Theme",
+    icon: Palette,
+    isComplete: (p) => Boolean(p.theme),
   },
 ];
 

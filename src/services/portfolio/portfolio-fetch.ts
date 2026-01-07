@@ -69,27 +69,61 @@ export const getPortfolio = async (
   }
 };
 
+/**
+ * Get public portfolio by username or slug
+ * @param identifier - Username or slug
+ * @returns Portfolio if found and public, null otherwise
+ */
 export const getPublicPortfolioByUsername = async (
-  username: string
+  identifier: string
 ): Promise<Portfolio | null> => {
   try {
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("username", username)
-      .single();
-
-    if (profileError || !profileData) {
-      throw new PortfolioServiceError("Profile not found");
-    }
-
-    // Check both published and settings.isPublic for public access
-    const { data: portfolioData, error: portfolioError } = await supabase
+    // First, try to find by slug
+    const { data: portfolioBySlug, error: slugError } = await supabase
       .from("portfolios")
-      .select("*")
-      .eq("user_id", profileData.id)
+      .select("*, user_id")
+      .eq("slug", identifier)
       .or("published.eq.true,settings->>isPublic.eq.true")
       .single();
+
+    let portfolioData = portfolioBySlug;
+    let userId: string | null = null;
+
+    if (portfolioBySlug && !slugError) {
+      // Found by slug
+      userId = portfolioBySlug.user_id;
+    } else {
+      // Try to find by username
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", identifier)
+        .single();
+
+      if (profileError || !profileData) {
+        throw new PortfolioServiceError("Profile not found");
+      }
+
+      userId = profileData.id;
+
+      // Check both published and settings.isPublic for public access
+      const { data: portfolioDataByUser, error: portfolioError } = await supabase
+        .from("portfolios")
+        .select("*")
+        .eq("user_id", profileData.id)
+        .or("published.eq.true,settings->>isPublic.eq.true")
+        .single();
+
+      if (portfolioError || !portfolioDataByUser) {
+        throw new PortfolioServiceError("Portfolio not found or not published");
+      }
+
+      portfolioData = portfolioDataByUser;
+    }
+
+    if (!portfolioData || !userId) {
+      throw new PortfolioServiceError("Portfolio not found or not published");
+    }
 
     if (portfolioError || !portfolioData) {
       throw new PortfolioServiceError("Portfolio not found or not published");
@@ -97,11 +131,11 @@ export const getPublicPortfolioByUsername = async (
 
     const [skillsData, projectsData, experienceData, educationData, certificationsData] =
       await Promise.all([
-        fetchSkills(profileData.id),
-        fetchProjects(profileData.id),
-        fetchExperience(profileData.id),
-        fetchEducation(profileData.id),
-        fetchCertifications(profileData.id),
+        fetchSkills(userId),
+        fetchProjects(userId),
+        fetchExperience(userId),
+        fetchEducation(userId),
+        fetchCertifications(userId),
       ]);
 
     const projectIds = projectsData.map((p) => p.id);

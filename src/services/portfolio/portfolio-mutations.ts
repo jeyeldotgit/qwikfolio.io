@@ -27,9 +27,33 @@ export const createOrUpdatePortfolio = async (
 
     const { data: existingPortfolio } = await supabase
       .from("portfolios")
-      .select("published")
+      .select("published, slug")
       .eq("user_id", userId)
       .single();
+
+    // Validate slug uniqueness if provided
+    if (validPortfolio.settings.slug) {
+      const { data: existingSlug, error: slugError } = await supabase
+        .from("portfolios")
+        .select("user_id")
+        .eq("slug", validPortfolio.settings.slug)
+        .neq("user_id", userId)
+        .single();
+
+      if (slugError && slugError.code !== "PGRST116") {
+        // PGRST116 means no rows found, which is what we want
+        throw new PortfolioServiceError(
+          `Failed to validate slug: ${slugError.message}`,
+          slugError.code
+        );
+      }
+
+      if (existingSlug) {
+        throw new PortfolioServiceError(
+          "This slug is already taken. Please choose a different one."
+        );
+      }
+    }
 
     // Prepare portfolio data with new fields
     const portfolioUpdateData: any = {

@@ -9,6 +9,9 @@ import { SkillsForm } from "@/components/builder/SkillsForm";
 import { ProjectsForm } from "@/components/builder/ProjectsForm";
 import { ExperienceForm } from "@/components/builder/ExperienceForm";
 import { EducationForm } from "@/components/builder/EducationForm";
+import { CertificationsForm } from "@/components/builder/CertificationsForm";
+import { SettingsForm } from "@/components/builder/SettingsForm";
+import { ThemeSettingsForm } from "@/components/builder/ThemeSettingsForm";
 
 type SaveStatus = "idle" | "saving" | "saved" | "unsaved";
 
@@ -24,6 +27,9 @@ const DashboardBuilderPage = () => {
     updateProjects,
     updateExperience,
     updateEducation,
+    updateCertifications,
+    updateSettings,
+    updateTheme,
     handleSave,
   } = usePortfolioBuilder();
 
@@ -42,6 +48,9 @@ const DashboardBuilderPage = () => {
     projects: useRef<HTMLDivElement>(null),
     experience: useRef<HTMLDivElement>(null),
     education: useRef<HTMLDivElement>(null),
+    certifications: useRef<HTMLDivElement>(null),
+    settings: useRef<HTMLDivElement>(null),
+    theme: useRef<HTMLDivElement>(null),
   };
 
   // Track unsaved changes
@@ -71,6 +80,9 @@ const DashboardBuilderPage = () => {
         projects: "projects",
         experience: "experience",
         education: "education",
+        certifications: "certifications",
+        settings: "settings",
+        theme: "theme",
       };
 
       const sectionKey = sectionMap[section as string];
@@ -271,6 +283,30 @@ const DashboardBuilderPage = () => {
                 value={portfolio.education ?? []}
                 onChange={updateEducation}
                 errors={errors.education}
+              />
+            </div>
+
+            <div ref={sectionRefs.certifications}>
+              <CertificationsForm
+                value={portfolio.certifications ?? []}
+                onChange={updateCertifications}
+                errors={errors.certifications}
+              />
+            </div>
+
+            <div ref={sectionRefs.settings}>
+              <SettingsForm
+                value={portfolio.settings}
+                onChange={updateSettings}
+                errors={errors.settings}
+              />
+            </div>
+
+            <div ref={sectionRefs.theme}>
+              <ThemeSettingsForm
+                value={portfolio.theme}
+                onChange={updateTheme}
+                errors={errors.theme}
               />
             </div>
 

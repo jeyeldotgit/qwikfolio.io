@@ -8,6 +8,9 @@ import {
   type Project,
   type Experience,
   type Education,
+  type Certification,
+  type PortfolioSettings,
+  type PortfolioTheme,
 } from "@/schemas/portfolio";
 import {
   getPortfolio,
@@ -31,6 +34,9 @@ type PortfolioBuilderErrors = {
   projects?: Record<number, Record<string, string>>;
   experience?: Record<number, Record<string, string>>;
   education?: Record<number, Record<string, string>>;
+  certifications?: Record<number, Record<string, string>>;
+  settings?: Record<string, string>;
+  theme?: Record<string, string>;
 };
 
 type UsePortfolioBuilderResult = {
@@ -43,6 +49,9 @@ type UsePortfolioBuilderResult = {
   updateProjects: (value: Project[]) => void;
   updateExperience: (value: Experience[]) => void;
   updateEducation: (value: Education[]) => void;
+  updateCertifications: (value: Certification[]) => void;
+  updateSettings: (value: PortfolioSettings) => void;
+  updateTheme: (value: PortfolioTheme) => void;
   handleSave: () => Promise<void>;
 };
 
@@ -69,6 +78,7 @@ const createEmptyPortfolio = (): Portfolio => ({
   projects: [],
   experience: [],
   education: [],
+  certifications: [],
   settings: {
     isPublic: false,
     showContactForm: true,
@@ -217,6 +227,51 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     }
   };
 
+  const updateCertifications = (value: Certification[]) => {
+    if (!portfolio) return;
+    setPortfolio((prev) => ({
+      ...prev!,
+      certifications: value,
+    }));
+    // Clear certifications errors when user modifies certifications
+    if (errors.certifications && Object.keys(errors.certifications).length > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        certifications: {},
+      }));
+    }
+  };
+
+  const updateSettings = (value: PortfolioSettings) => {
+    if (!portfolio) return;
+    setPortfolio((prev) => ({
+      ...prev!,
+      settings: value,
+    }));
+    // Clear settings errors when user modifies settings
+    if (errors.settings && Object.keys(errors.settings).length > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        settings: {},
+      }));
+    }
+  };
+
+  const updateTheme = (value: PortfolioTheme) => {
+    if (!portfolio) return;
+    setPortfolio((prev) => ({
+      ...prev!,
+      theme: value,
+    }));
+    // Clear theme errors when user modifies theme
+    if (errors.theme && Object.keys(errors.theme).length > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        theme: {},
+      }));
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !portfolio) {
       setErrors({
@@ -247,6 +302,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         projects: {},
         experience: {},
         education: {},
+        certifications: {},
+        settings: {},
+        theme: {},
       };
 
       // Group errors by section
@@ -284,6 +342,21 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
             }
             organizedErrors.education![eduIndex][field] = error.message;
           }
+        } else if (section === "certifications" && typeof rest[0] === "number") {
+          const certIndex = rest[0];
+          const field = rest[1];
+          if (typeof field === "string") {
+            if (!organizedErrors.certifications![certIndex]) {
+              organizedErrors.certifications![certIndex] = {};
+            }
+            organizedErrors.certifications![certIndex][field] = error.message;
+          }
+        } else if (section === "settings" && typeof rest[0] === "string") {
+          const field = rest[0];
+          organizedErrors.settings![field] = error.message;
+        } else if (section === "theme" && typeof rest[0] === "string") {
+          const field = rest[0];
+          organizedErrors.theme![field] = error.message;
         }
       });
 
@@ -331,6 +404,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     updateProjects,
     updateExperience,
     updateEducation,
+    updateCertifications,
+    updateSettings,
+    updateTheme,
     handleSave,
   };
 };

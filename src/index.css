@@ -115,6 +115,16 @@
   --sidebar-ring: oklch(0.696 0.17 162.48);
 }
 
+/* Portfolio Theme CSS Variables */
+:root {
+  --portfolio-primary: #10b981;
+  --portfolio-primary-dark: #34d399;
+  --portfolio-accent-opacity: 0.1;
+  --portfolio-accent-saturation: 100%;
+  --portfolio-radius: 0.5rem;
+  --portfolio-layout: sidebar-left;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

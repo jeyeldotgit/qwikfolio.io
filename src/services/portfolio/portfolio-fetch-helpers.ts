@@ -1,9 +1,5 @@
 import supabase from "@/lib/supabase";
 import { PortfolioServiceError } from "./portfolio-errors";
-import type { Skill, Certification } from "@/schemas/portfolio";
-
-// Legacy skills format (for backward compatibility)
-type LegacySkillsData = { skill: string }[];
 // New structured skills format
 type StructuredSkillsData = {
   id: string;

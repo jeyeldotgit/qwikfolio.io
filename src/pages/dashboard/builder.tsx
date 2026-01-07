@@ -13,7 +13,6 @@ import { CertificationsForm } from "@/components/builder/CertificationsForm";
 import { SettingsForm } from "@/components/builder/SettingsForm";
 import { ThemeSettingsForm } from "@/components/builder/ThemeSettingsForm";
 
-type SaveStatus = "idle" | "saving" | "saved" | "unsaved";
 
 const DashboardBuilderPage = () => {
   const navigate = useNavigate();

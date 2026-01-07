@@ -52,7 +52,7 @@ const THEME_PRESETS: Array<{
 export const ThemeSettingsForm = ({
   value,
   onChange,
-  errors = {},
+  errors: _errors = {},
   className,
 }: ThemeSettingsFormProps) => {
   const handleChange = (updates: Partial<PortfolioTheme>) => {

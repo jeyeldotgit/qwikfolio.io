@@ -194,7 +194,7 @@ export const PersonalInfoForm = ({
                 onChange={(event) =>
                   handleFieldChange(
                     "roleLevel",
-                    event.target.value || undefined
+                    (event.target.value || undefined) as "junior" | "mid" | "senior" | "lead" | undefined
                   )
                 }
                 className={cn(

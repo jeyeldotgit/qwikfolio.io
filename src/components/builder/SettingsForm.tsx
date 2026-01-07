@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { cn } from "@/lib/utils";
-import { Globe, Eye, EyeOff, Mail } from "lucide-react";
+import { Eye, EyeOff, Mail } from "lucide-react";
 
 type SettingsFormProps = {
   value: PortfolioSettings;

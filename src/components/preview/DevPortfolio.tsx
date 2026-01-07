@@ -464,11 +464,11 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         color: `var(--portfolio-primary)`,
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderOpacity = "1";
+                        e.currentTarget.style.opacity = "1";
                         e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.1)`;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderOpacity = "0.5";
+                        e.currentTarget.style.opacity = "0.8";
                         e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.05)`;
                       }}
                     >
@@ -530,7 +530,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         onMouseEnter={
                           isPrimary
                             ? (e) => {
-                                e.currentTarget.style.borderOpacity = "1";
+                                e.currentTarget.style.opacity = "1";
                                 e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.1)`;
                               }
                             : undefined
@@ -538,7 +538,7 @@ export const DevPortfolio = ({ portfolio, avatar }: DevPortfolioProps) => {
                         onMouseLeave={
                           isPrimary
                             ? (e) => {
-                                e.currentTarget.style.borderOpacity = "0.5";
+                                e.currentTarget.style.opacity = "0.8";
                                 e.currentTarget.style.backgroundColor = `rgba(var(--portfolio-primary-rgb), 0.05)`;
                               }
                             : undefined

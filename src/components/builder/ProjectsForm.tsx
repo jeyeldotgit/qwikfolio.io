@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Project, ProjectMedia } from "@/schemas/portfolio";
+import type { Project } from "@/schemas/portfolio";
 import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { TextareaWithCounter } from "@/components/ui/textarea-with-counter";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Plus, X, Star, Image as ImageIcon, Video } from "lucide-react";
+import { Plus, X, Star } from "lucide-react";
 
 type ProjectsFormProps = {
   value: Project[];

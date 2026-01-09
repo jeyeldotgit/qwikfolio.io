@@ -26,7 +26,8 @@ export const saveSkills = async (
       level: skill.level,
       years_experience: skill.yearsExperience || null,
       // Keep legacy skill field for backward compatibility
-      skill: skill.name,
+      // Ensure it meets the minimum length requirement if constraint exists
+      skill: skill.name && skill.name.length >= 2 ? skill.name : null,
     }));
 
     const { error: insertError } = await supabase

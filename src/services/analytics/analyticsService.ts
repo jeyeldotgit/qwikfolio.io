@@ -29,7 +29,7 @@ export const trackPortfolioView = async (
         .insert({
           user_id: userId,
           event_type: "view",
-          metadata: slug ? { slug } : null,
+          slug: slug || null,
         });
 
       if (insertError) {
@@ -51,9 +51,23 @@ export const trackContactClick = async (
   type: string
 ): Promise<void> => {
   try {
+    // Get user_id from slug
+    const { data: portfolioData, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("user_id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (portfolioError || !portfolioData?.user_id) {
+      console.error("Failed to find portfolio for slug:", slug, portfolioError);
+      return;
+    }
+
     const { error } = await supabase.from("portfolio_analytics").insert({
+      user_id: portfolioData.user_id,
       event_type: "contact_click",
-      metadata: { slug, type },
+      slug: slug,
+      event_data: { type },
     });
 
     if (error) {
@@ -72,9 +86,23 @@ export const trackSocialLinkClick = async (
   type: string
 ): Promise<void> => {
   try {
+    // Get user_id from slug
+    const { data: portfolioData, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("user_id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (portfolioError || !portfolioData?.user_id) {
+      console.error("Failed to find portfolio for slug:", slug, portfolioError);
+      return;
+    }
+
     const { error } = await supabase.from("portfolio_analytics").insert({
+      user_id: portfolioData.user_id,
       event_type: "social_click",
-      metadata: { slug, type },
+      slug: slug,
+      event_data: { type },
     });
 
     if (error) {
@@ -93,9 +121,23 @@ export const trackProjectView = async (
   projectId: string
 ): Promise<void> => {
   try {
+    // Get user_id from slug
+    const { data: portfolioData, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("user_id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (portfolioError || !portfolioData?.user_id) {
+      console.error("Failed to find portfolio for slug:", slug, portfolioError);
+      return;
+    }
+
     const { error } = await supabase.from("portfolio_analytics").insert({
+      user_id: portfolioData.user_id,
       event_type: "project_view",
-      metadata: { slug, project_id: projectId },
+      slug: slug,
+      project_id: projectId,
     });
 
     if (error) {
@@ -130,7 +172,7 @@ export const getPortfolioViews = async (
       .from("portfolio_analytics")
       .select("*", { count: "exact", head: true })
       .eq("event_type", "view")
-      .contains("metadata", { slug });
+      .eq("slug", slug);
 
     if (startDate) {
       query.gte("created_at", startDate.toISOString());
@@ -159,9 +201,9 @@ export const getTopProjects = async (
   try {
     const { data, error } = await supabase
       .from("portfolio_analytics")
-      .select("metadata")
+      .select("project_id")
       .eq("event_type", "project_view")
-      .contains("metadata", { slug });
+      .eq("slug", slug);
 
     if (error) {
       console.error("Failed to get top projects:", error);
@@ -171,12 +213,9 @@ export const getTopProjects = async (
     // Aggregate project views
     const projectViews = new Map<string, number>();
     data?.forEach((event) => {
-      const projectId = event.metadata?.project_id;
+      const projectId = event.project_id;
       if (projectId) {
-        projectViews.set(
-          projectId,
-          (projectViews.get(projectId) || 0) + 1
-        );
+        projectViews.set(projectId, (projectViews.get(projectId) || 0) + 1);
       }
     });
 

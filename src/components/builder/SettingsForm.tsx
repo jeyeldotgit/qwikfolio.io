@@ -34,9 +34,7 @@ export const SettingsForm = ({
         {/* Slug */}
         <FormSection title="Portfolio URL">
           <div className="space-y-2">
-            <Label htmlFor="settings-slug">
-              Custom Slug (optional)
-            </Label>
+            <Label htmlFor="settings-slug">Custom URL (optional)</Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-500 dark:text-slate-400">
                 qwikfolio.io/
@@ -50,7 +48,8 @@ export const SettingsForm = ({
                 }
                 className={cn(
                   "flex-1",
-                  errors.slug && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  errors.slug &&
+                    "border-red-500 focus:border-red-500 focus:ring-red-500"
                 )}
               />
             </div>
@@ -60,7 +59,8 @@ export const SettingsForm = ({
               </p>
             )}
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Use only lowercase letters, numbers, and hyphens. Leave empty to use your username.
+              Use only lowercase letters, numbers, and hyphens. Leave empty to
+              use your username.
             </p>
           </div>
         </FormSection>
@@ -105,9 +105,7 @@ export const SettingsForm = ({
         <FormSection title="SEO Settings">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="settings-seo-title">
-                SEO Title (optional)
-              </Label>
+              <Label htmlFor="settings-seo-title">SEO Title (optional)</Label>
               <Input
                 id="settings-seo-title"
                 placeholder="e.g., John Doe - Full Stack Developer"
@@ -116,7 +114,8 @@ export const SettingsForm = ({
                   handleChange({ seoTitle: event.target.value || undefined })
                 }
                 className={cn(
-                  errors.seoTitle && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  errors.seoTitle &&
+                    "border-red-500 focus:border-red-500 focus:ring-red-500"
                 )}
               />
               {errors.seoTitle && (
@@ -144,7 +143,8 @@ export const SettingsForm = ({
                   })
                 }
                 className={cn(
-                  errors.seoDescription && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  errors.seoDescription &&
+                    "border-red-500 focus:border-red-500 focus:ring-red-500"
                 )}
               />
               {errors.seoDescription && (
@@ -202,7 +202,8 @@ export const SettingsForm = ({
                     })
                   }
                   className={cn(
-                    errors.contactEmail && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    errors.contactEmail &&
+                      "border-red-500 focus:border-red-500 focus:ring-red-500"
                   )}
                 />
                 {errors.contactEmail && (
@@ -221,4 +222,3 @@ export const SettingsForm = ({
     </FormCard>
   );
 };
-

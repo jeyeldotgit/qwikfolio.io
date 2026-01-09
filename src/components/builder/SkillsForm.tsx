@@ -111,6 +111,12 @@ export const SkillsForm = ({
                 placeholder="e.g., TypeScript"
                 value={draftSkill}
                 onChange={(event) => setDraftSkill(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
               />
             </div>
             <Button

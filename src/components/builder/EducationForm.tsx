@@ -56,8 +56,9 @@ export const EducationForm = ({
     >
       <div className="space-y-6">
         {value.map((edu, index) => {
-          // Create a stable key that doesn't change on re-render
-          const stableKey = edu.id ?? `edu-${index}-${edu.school || edu.degree || edu.startDate || 'new'}`;
+          // Use id if available, otherwise use index for stable key
+          // This prevents key changes when user types, which causes input to lose focus
+          const stableKey = edu.id ?? `edu-new-${index}`;
           return (
           <FormSection key={stableKey} title={`Education ${index + 1}`}>
             <div className="space-y-4">

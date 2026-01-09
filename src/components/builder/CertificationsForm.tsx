@@ -54,8 +54,9 @@ export const CertificationsForm = ({
     >
       <div className="space-y-6">
         {value.map((cert, index) => {
-          // Create a stable key that doesn't change on re-render
-          const stableKey = cert.id ?? `cert-${index}-${cert.name || cert.issuer || cert.issueDate || 'new'}`;
+          // Use id if available, otherwise use index for stable key
+          // This prevents key changes when user types, which causes input to lose focus
+          const stableKey = cert.id ?? `cert-new-${index}`;
           return (
           <FormSection
             key={stableKey}

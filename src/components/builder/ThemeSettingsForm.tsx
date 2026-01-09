@@ -59,7 +59,7 @@ export const ThemeSettingsForm = ({
     onChange({ ...value, ...updates });
   };
 
-  const handlePresetSelect = (preset: typeof THEME_PRESETS[0]) => {
+  const handlePresetSelect = (preset: (typeof THEME_PRESETS)[0]) => {
     onChange({
       ...value,
       id: preset.id,
@@ -91,10 +91,7 @@ export const ThemeSettingsForm = ({
               >
                 <div className="mb-3 flex items-center gap-2">
                   <div
-                    className={cn(
-                      "h-8 w-8 rounded-md",
-                      preset.preview.accent
-                    )}
+                    className={cn("h-8 w-8 rounded-md", preset.preview.accent)}
                   />
                   <div className="flex-1">
                     <p className="font-medium text-slate-900 dark:text-white">
@@ -120,9 +117,11 @@ export const ThemeSettingsForm = ({
           <div className="space-y-6">
             {/* Primary Color */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Primary Color
+              <Label className="flex  items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  <span>Primary Color</span>
+                </div>
               </Label>
               <div className="grid grid-cols-4 gap-3">
                 {(["emerald", "cyan", "violet", "amber"] as const).map(
@@ -205,56 +204,52 @@ export const ThemeSettingsForm = ({
             </div>
 
             {/* Layout */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Layout className="h-4 w-4" />
                 Layout
               </Label>
               <div className="grid grid-cols-3 gap-3">
-                {(
-                  [
-                    "sidebar-left",
-                    "sidebar-top",
-                    "one-column",
-                  ] as const
-                ).map((layout) => (
-                  <button
-                    key={layout}
-                    type="button"
-                    onClick={() => handleChange({ layout })}
-                    className={cn(
-                      "group relative overflow-hidden rounded-lg border-2 p-4 transition-all",
-                      value.layout === layout
-                        ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/20"
-                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/30 dark:hover:border-slate-700"
-                    )}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      {layout === "sidebar-left" && (
-                        <>
-                          <div className="h-8 w-2 rounded bg-emerald-600 dark:bg-emerald-400" />
-                          <div className="h-8 w-6 rounded bg-slate-300 dark:bg-slate-700" />
-                        </>
+                {(["sidebar-left", "sidebar-top", "one-column"] as const).map(
+                  (layout) => (
+                    <button
+                      key={layout}
+                      type="button"
+                      onClick={() => handleChange({ layout })}
+                      className={cn(
+                        "group relative overflow-hidden rounded-lg border-2 p-4 transition-all",
+                        value.layout === layout
+                          ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/20"
+                          : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/30 dark:hover:border-slate-700"
                       )}
-                      {layout === "sidebar-top" && (
-                        <div className="space-y-1">
-                          <div className="h-2 w-8 rounded bg-emerald-600 dark:bg-emerald-400" />
-                          <div className="h-6 w-8 rounded bg-slate-300 dark:bg-slate-700" />
-                        </div>
-                      )}
-                      {layout === "one-column" && (
-                        <div className="h-8 w-8 rounded bg-slate-300 dark:bg-slate-700" />
-                      )}
-                    </div>
-                    <p className="mt-2 text-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                      {layout === "sidebar-left" && "Sidebar Left"}
-                      {layout === "sidebar-top" && "Sidebar Top"}
-                      {layout === "one-column" && "One Column"}
-                    </p>
-                  </button>
-                ))}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        {layout === "sidebar-left" && (
+                          <>
+                            <div className="h-8 w-2 rounded bg-emerald-600 dark:bg-emerald-400" />
+                            <div className="h-8 w-6 rounded bg-slate-300 dark:bg-slate-700" />
+                          </>
+                        )}
+                        {layout === "sidebar-top" && (
+                          <div className="space-y-1">
+                            <div className="h-2 w-8 rounded bg-emerald-600 dark:bg-emerald-400" />
+                            <div className="h-6 w-8 rounded bg-slate-300 dark:bg-slate-700" />
+                          </div>
+                        )}
+                        {layout === "one-column" && (
+                          <div className="h-8 w-8 rounded bg-slate-300 dark:bg-slate-700" />
+                        )}
+                      </div>
+                      <p className="mt-2 text-center text-xs font-medium text-slate-700 dark:text-slate-300">
+                        {layout === "sidebar-left" && "Sidebar Left"}
+                        {layout === "sidebar-top" && "Sidebar Top"}
+                        {layout === "one-column" && "One Column"}
+                      </p>
+                    </button>
+                  )
+                )}
               </div>
-            </div>
+            </div> */}
 
             {/* Show Profile Photo */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
@@ -287,4 +282,3 @@ export const ThemeSettingsForm = ({
     </FormCard>
   );
 };
-

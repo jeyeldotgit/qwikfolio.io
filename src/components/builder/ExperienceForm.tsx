@@ -55,10 +55,9 @@ export const ExperienceForm = ({
     >
       <div className="space-y-6">
         {value.map((exp, index) => {
-          // Create a stable key that doesn't change on re-render
-          const stableKey =
-            exp.id ??
-            `exp-${index}-${exp.company || exp.role || exp.startDate || "new"}`;
+          // Use id if available, otherwise use index for stable key
+          // This prevents key changes when user types, which causes input to lose focus
+          const stableKey = exp.id ?? `exp-new-${index}`;
           return (
             <FormSection key={stableKey} title={`Experience ${index + 1}`}>
               <div className="space-y-4">

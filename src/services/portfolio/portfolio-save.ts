@@ -102,7 +102,7 @@ export const saveProjects = async (
         );
       }
 
-      await saveProjectTechStack(project.id, project.techStack);
+      await saveProjectTechStack(project.id, project.techStack || []);
     } else {
       const { data: newProject, error: insertError } = await supabase
         .from("projects")
@@ -117,7 +117,7 @@ export const saveProjects = async (
         );
       }
 
-      await saveProjectTechStack(newProject.id, project.techStack);
+      await saveProjectTechStack(newProject.id, project.techStack || []);
     }
   }
 };
@@ -126,6 +126,7 @@ export const saveProjectTechStack = async (
   projectId: string,
   techStack: string[]
 ): Promise<void> => {
+  // First, delete all existing tech stack for this project
   const { error: deleteError } = await supabase
     .from("project_tech_stack")
     .delete()
@@ -138,10 +139,15 @@ export const saveProjectTechStack = async (
     );
   }
 
-  if (techStack.length > 0) {
-    const techStackToInsert = techStack.map((tech) => ({
+  // Deduplicate and filter out empty strings before inserting
+  const uniqueTechStack = Array.from(
+    new Set(techStack.filter((tech) => tech && tech.trim().length > 0))
+  );
+
+  if (uniqueTechStack.length > 0) {
+    const techStackToInsert = uniqueTechStack.map((tech) => ({
       project_id: projectId,
-      tech,
+      tech: tech.trim(),
     }));
 
     const { error: insertError } = await supabase

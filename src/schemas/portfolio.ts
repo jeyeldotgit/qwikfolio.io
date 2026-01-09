@@ -1,5 +1,38 @@
 import { z } from "zod";
 
+// Custom URL validator that accepts URLs with or without protocol
+// Automatically prepends https:// if protocol is missing
+const urlSchema = z
+  .string()
+  .min(1, "URL cannot be empty")
+  .transform((val) => {
+    const trimmed = val.trim();
+    if (!trimmed) return trimmed;
+    // If it already has a protocol, return as is
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    // Otherwise, prepend https://
+    return `https://${trimmed}`;
+  })
+  .pipe(z.string().url("Invalid URL"));
+
+// Optional URL schema (allows empty string or valid URL)
+const optionalUrlSchema = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (!val || val.trim() === "") return "";
+    const trimmed = val.trim();
+    // If it already has a protocol, return as is
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    // Otherwise, prepend https://
+    return `https://${trimmed}`;
+  })
+  .pipe(z.union([z.string().url("Invalid URL"), z.literal("")]));
+
 // Social Links Schema
 export const socialLinkSchema = z.object({
   type: z.enum([
@@ -12,7 +45,7 @@ export const socialLinkSchema = z.object({
     "devto",
     "portfolio",
   ]),
-  url: z.string().url("Invalid URL"),
+  url: urlSchema,
 });
 
 // Personal Info Schema
@@ -22,17 +55,17 @@ export const personalInfoSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   bio: z.string().optional(),
-  website: z.string().url("Invalid URL").optional().or(z.literal("")),
+  website: optionalUrlSchema,
   location: z.string().optional(),
   roleLevel: z.enum(["junior", "mid", "senior", "lead"]).optional(),
   availability: z.enum(["open_to_work", "freelance", "not_open"]).optional(),
   hourlyRate: z.number().positive().optional(),
   salaryRange: z.string().optional(),
-  profilePhotoUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  profilePhotoUrl: optionalUrlSchema,
   socialLinks: z.array(socialLinkSchema).default([]),
   // Legacy fields for backward compatibility (deprecated)
-  github: z.string().url("Invalid GitHub URL").optional().or(z.literal("")),
-  linkedin: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  github: optionalUrlSchema,
+  linkedin: optionalUrlSchema,
 });
 
 // Structured Skill Schema
@@ -46,7 +79,7 @@ export const skillSchema = z.object({
 // Media Schema
 export const mediaSchema = z.object({
   type: z.enum(["image", "video"]),
-  url: z.string().url("Invalid URL"),
+  url: urlSchema,
 });
 
 // Project Schema
@@ -55,8 +88,8 @@ export const projectSchema = z.object({
   name: z.string().min(2, "Project name is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   techStack: z.array(z.string()).min(1, "At least one technology is required"),
-  repoUrl: z.string().url("Invalid URL").or(z.literal("")),
-  liveUrl: z.string().url("Invalid URL").or(z.literal("")),
+  repoUrl: optionalUrlSchema,
+  liveUrl: optionalUrlSchema,
   role: z.string().optional(),
   highlights: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -102,7 +135,7 @@ export const certificationSchema = z.object({
   issueDate: z.string().min(1, "Issue date is required"),
   expiryDate: z.string().optional(),
   credentialId: z.string().optional(),
-  credentialUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  credentialUrl: optionalUrlSchema,
 });
 
 // Settings Schema

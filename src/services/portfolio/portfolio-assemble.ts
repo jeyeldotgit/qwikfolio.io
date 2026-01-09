@@ -138,13 +138,13 @@ export const assemblePortfolio = (
     email: portfolioData.email,
     phone: portfolioData.phone || undefined,
     bio: portfolioData.bio || undefined,
-    website: portfolioData.website || undefined,
+    website: portfolioData.website || "",
     location: portfolioData.location || undefined,
     roleLevel,
     availability,
     hourlyRate: portfolioData.hourly_rate || undefined,
     salaryRange: portfolioData.salary_range || undefined,
-    profilePhotoUrl: portfolioData.profile_photo_url || undefined,
+    profilePhotoUrl: portfolioData.profile_photo_url || "",
     socialLinks: socialLinks.length > 0 ? socialLinks : [],
     // Legacy fields for backward compatibility
     github: portfolioData.github || "",
@@ -261,7 +261,7 @@ export const assemblePortfolio = (
         issueDate: c.issue_date,
         expiryDate: c.expiry_date || undefined,
         credentialId: c.credential_id || undefined,
-        credentialUrl: c.credential_url || undefined,
+        credentialUrl: c.credential_url || "",
       }))
     : undefined;
 

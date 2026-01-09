@@ -3,7 +3,7 @@ import { FormCard } from "@/components/form/FormCard";
 import { FormSection } from "@/components/form/FormSection";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { Palette, Layout, Image } from "lucide-react";
+import { Palette, Image } from "lucide-react";
 
 type ThemeSettingsFormProps = {
   value: PortfolioTheme;

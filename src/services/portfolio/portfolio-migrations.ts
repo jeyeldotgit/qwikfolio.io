@@ -85,7 +85,7 @@ export function migratePersonalInfo(legacy: {
     email: legacy.email,
     phone: legacy.phone || undefined,
     bio: legacy.bio || undefined,
-    website: legacy.website || undefined,
+    website: legacy.website || "",
     location: legacy.location || undefined,
     roleLevel: legacy.roleLevel as PersonalInfo["roleLevel"] | undefined,
     availability: legacy.availability as
@@ -93,7 +93,7 @@ export function migratePersonalInfo(legacy: {
       | undefined,
     hourlyRate: legacy.hourlyRate || undefined,
     salaryRange: legacy.salaryRange || undefined,
-    profilePhotoUrl: legacy.profilePhotoUrl || undefined,
+    profilePhotoUrl: legacy.profilePhotoUrl || "",
     socialLinks,
     // Keep legacy fields for backward compatibility
     github: legacy.github || "",

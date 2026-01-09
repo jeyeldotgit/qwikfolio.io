@@ -82,7 +82,10 @@ export const saveProjects = async (
       repo_url: project.repoUrl || null,
       live_url: project.liveUrl || null,
       role: project.role || null,
-      highlights: project.highlights && project.highlights.length > 0 ? project.highlights : null,
+      highlights:
+        project.highlights && project.highlights.length > 0
+          ? project.highlights
+          : null,
       tags: project.tags && project.tags.length > 0 ? project.tags : null,
       featured: project.featured || false,
       order: project.order || 0,
@@ -190,7 +193,10 @@ export const saveExperience = async (
       location: exp.location || null,
       employment_type: exp.employmentType || null,
       description: exp.description || null,
-      achievements: exp.achievements && exp.achievements.length > 0 ? exp.achievements : null,
+      achievements:
+        exp.achievements && exp.achievements.length > 0
+          ? exp.achievements
+          : null,
     }));
 
     const { error: insertError } = await supabase
@@ -233,7 +239,8 @@ export const saveEducation = async (
       current: edu.current || false,
       description: edu.description || null,
       gpa: edu.gpa || null,
-      coursework: edu.coursework && edu.coursework.length > 0 ? edu.coursework : null,
+      coursework:
+        edu.coursework && edu.coursework.length > 0 ? edu.coursework : null,
       honors: edu.honors || null,
     }));
 

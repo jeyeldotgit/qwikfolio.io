@@ -131,7 +131,7 @@ export const subscribeToAuthChanges = (
   };
 };
 
-// Email Authentication
+// OAuth Authentication
 export const authenticateWithOAuth = async (
   provider: OAuthProvider
 ): Promise<
@@ -161,4 +161,20 @@ export const authenticateWithOAuth = async (
     success: true,
     message: "Authentication initiated",
   };
+};
+
+// Check if user has completed onboarding
+export const hasCompletedOnboarding = async (
+  userId: string
+): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", userId)
+    .single();
+  if (error) {
+    console.error("Error checking onboarding status:", error);
+    return false;
+  }
+  return data?.onboarding_completed ?? false;
 };

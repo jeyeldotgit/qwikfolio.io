@@ -7,6 +7,7 @@ import {
   updateProfile,
   getProfile,
 } from "@/services/profile/profileService";
+import { hasCompletedOnboarding } from "@/services/auth/supabase-auth";
 import { uploadAvatar } from "@/services/storage/avatarStorageService";
 import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
@@ -23,6 +24,23 @@ const ProfileCompletionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [oAuthAvatarRemoved, setOAuthAvatarRemoved] = useState(false);
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState<
+    boolean | null
+  >(null);
+
+  // Check if user has completed onboarding
+  useEffect(() => {
+    if (user?.id) {
+      hasCompletedOnboarding(user.id).then((completed) => {
+        setIsOnboardingCompleted(completed);
+      });
+    }
+  }, [user?.id]);
+
+  // If onboarding is already completed, redirect to dashboard
+  if (isOnboardingCompleted) {
+    navigate("/dashboard");
+  }
 
   // Check if user has an avatar in OAuth
   const oAuthAvatarUrl = user?.user_metadata?.avatar_url;

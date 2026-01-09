@@ -164,7 +164,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
   }, [user]);
 
   // Debounce portfolio changes for autosave (2 seconds delay)
-  const debouncedPortfolio = useDebounce(portfolio, 2000);
+  const debouncedPortfolio = useDebounce(portfolio, 5000);
 
   // Track previous portfolio to avoid unnecessary updates
   const previousPortfolioRef = useRef<string | null>(null);
@@ -182,7 +182,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
 
     // Create a stable string representation to compare
     const portfolioString = JSON.stringify(debouncedPortfolio);
-    
+
     // Skip if portfolio hasn't actually changed
     if (previousPortfolioRef.current === portfolioString) {
       return;
@@ -217,8 +217,11 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
           return;
         }
 
-        const savedPortfolio = await createOrUpdatePortfolio(user.id, draftPortfolio);
-        
+        const savedPortfolio = await createOrUpdatePortfolio(
+          user.id,
+          draftPortfolio
+        );
+
         // Only update portfolio state if the saved data is meaningfully different
         // Compare only the data that matters (not internal IDs or timestamps)
         const normalizeForComparison = (p: Portfolio) => {
@@ -234,23 +237,23 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
             primaryStack: p.primaryStack,
           });
         };
-        
+
         const currentNormalized = normalizeForComparison(debouncedPortfolio);
         const savedNormalized = normalizeForComparison(savedPortfolio);
-        
+
         // Only update portfolio state if the saved data is meaningfully different
         // This prevents unnecessary re-renders that cause duplicate inputs
         if (savedNormalized !== currentNormalized) {
           // Use functional update to check against current state before updating
           setPortfolio((prev) => {
             if (!prev) return savedPortfolio;
-            
+
             // Double-check that we're not setting the same data
             const prevNormalized = normalizeForComparison(prev);
             if (prevNormalized === savedNormalized) {
               return prev; // Return same reference to prevent re-render
             }
-            
+
             return savedPortfolio;
           });
           previousPortfolioRef.current = savedNormalized;
@@ -259,7 +262,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
           // Don't update portfolio state to avoid re-renders
           previousPortfolioRef.current = portfolioString;
         }
-        
+
         setLastSavedAt(new Date());
         setAutosaveStatus("saved");
         setSaveStatus("saved");
@@ -280,7 +283,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         toast({
           variant: "destructive",
           title: "Autosave failed",
-          description: "Your changes weren't saved automatically. Please save manually.",
+          description:
+            "Your changes weren't saved automatically. Please save manually.",
         });
       } finally {
         isAutosavingRef.current = false;
@@ -394,7 +398,10 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     hasUnsavedChanges.current = true;
     setSaveStatus("unsaved");
     // Clear certifications errors when user modifies certifications
-    if (errors.certifications && Object.keys(errors.certifications).length > 0) {
+    if (
+      errors.certifications &&
+      Object.keys(errors.certifications).length > 0
+    ) {
       setErrors((prev) => ({
         ...prev,
         certifications: {},
@@ -506,7 +513,10 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
             }
             organizedErrors.education![eduIndex][field] = error.message;
           }
-        } else if (section === "certifications" && typeof rest[0] === "number") {
+        } else if (
+          section === "certifications" &&
+          typeof rest[0] === "number"
+        ) {
           const certIndex = rest[0];
           const field = rest[1];
           if (typeof field === "string") {

@@ -152,6 +152,7 @@ export const ProjectsForm = ({
       title="Projects"
       description="Show the work that best represents what you can do."
       className={className}
+      required
     >
       <div className="space-y-6">
         {value.map((project, index) => (

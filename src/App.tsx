@@ -6,6 +6,7 @@ import DashboardBuilderPage from "./pages/dashboard/builder";
 import DashboardPreviewPage from "./pages/dashboard/preview";
 import ProfileCompletionPage from "./pages/dashboard/profile-completion";
 import PublicPortfolioPage from "./pages/PublicPortfolioPage";
+import AuthCallback from "./pages/AuthCallback";
 import { ProtectedRoute } from "./components/route/ProtectedRoute";
 
 const App = () => {
@@ -13,6 +14,14 @@ const App = () => {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route
+        path="/auth/callback"
+        element={
+          <ProtectedRoute>
+            <AuthCallback />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={

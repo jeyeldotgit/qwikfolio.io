@@ -7,6 +7,7 @@ type FormCardProps = {
   description?: string;
   children: ReactNode;
   className?: string;
+  required?: boolean;
 };
 
 export const FormCard = ({
@@ -14,6 +15,7 @@ export const FormCard = ({
   description,
   children,
   className,
+  required,
 }: FormCardProps) => {
   return (
     <Card
@@ -24,9 +26,16 @@ export const FormCard = ({
       )}
     >
       <CardHeader className="px-4 py-4 sm:px-6 sm:py-5">
-        <CardTitle className="text-base font-semibold text-foreground">
-          {title}
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base font-semibold text-foreground">
+            {title}
+          </CardTitle>
+          {required && (
+            <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-500/30">
+              Required
+            </span>
+          )}
+        </div>
         {description ? (
           <p className="mt-1 text-xs text-muted-foreground">{description}</p>
         ) : null}

@@ -130,9 +130,10 @@ export const PersonalInfoForm = ({
       title="Personal Information"
       description="Tell us about yourself"
       className={className}
+      required
     >
       <div className="space-y-6">
-        <FormSection title="Basic Information">
+        <FormSection title="Basic Information" required>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" required>
@@ -370,7 +371,7 @@ export const PersonalInfoForm = ({
           </div>
         </FormSection>
 
-        <FormSection title="Contact Information">
+        <FormSection title="Contact Information" required>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email" required>

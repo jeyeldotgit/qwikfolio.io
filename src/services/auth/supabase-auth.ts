@@ -138,7 +138,7 @@ export const authenticateWithOAuth = async (
   | { success: boolean; message: string }
   | { error: string; success: false; message: string }
 > => {
-  const redirectUrl = `${window.location.origin}/onboarding`;
+  const redirectUrl = `${window.location.origin}/auth/callback`;
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: provider,

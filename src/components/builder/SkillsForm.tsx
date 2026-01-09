@@ -95,9 +95,10 @@ export const SkillsForm = ({
       title="Skills"
       description="Highlight the skills that show up in your work."
       className={className}
+      required
     >
       <div className="space-y-6">
-        <FormSection title="Add Skills">
+        <FormSection title="Add Skills" required>
           {error && (
             <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {error}

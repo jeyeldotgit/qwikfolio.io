@@ -70,7 +70,7 @@ export const personalInfoSchema = z.object({
 
 // Structured Skill Schema
 export const skillSchema = z.object({
-  name: z.string().min(2, "Skill name must be at least 2 characters"),
+  name: z.string().min(1, "Skill name is required"),
   category: z.enum(["language", "framework", "tool", "soft_skill"]),
   level: z.enum(["beginner", "intermediate", "advanced"]),
   yearsExperience: z.number().positive().optional(),

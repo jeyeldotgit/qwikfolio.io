@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuthSession } from "./useAuthSession";
-import { useDebounce } from "./useDebounce";
 import {
   portfolioSchema,
   type Portfolio,
@@ -43,6 +42,16 @@ type PortfolioBuilderErrors = {
 type AutosaveStatus = "idle" | "saving" | "saved" | "error";
 type SaveStatus = "idle" | "saving" | "saved" | "unsaved";
 
+type PortfolioSection =
+  | "personalInfo"
+  | "skills"
+  | "projects"
+  | "experience"
+  | "education"
+  | "certifications"
+  | "settings"
+  | "theme";
+
 type UsePortfolioBuilderResult = {
   state: PortfolioBuilderState;
   portfolio: Portfolio | null;
@@ -60,6 +69,7 @@ type UsePortfolioBuilderResult = {
   updateSettings: (value: PortfolioSettings) => void;
   updateTheme: (value: PortfolioTheme) => void;
   handleSave: () => Promise<void>;
+  autosaveSection: (section: PortfolioSection) => Promise<void>;
 };
 
 const createEmptyPortfolio = (): Portfolio => ({
@@ -116,6 +126,48 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
   const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAutosavingRef = useRef(false);
 
+  // Per-section autosave tracking
+  const sectionAutosaveTimeouts = useRef<
+    Record<PortfolioSection, ReturnType<typeof setTimeout> | null>
+  >({
+    personalInfo: null,
+    skills: null,
+    projects: null,
+    experience: null,
+    education: null,
+    certifications: null,
+    settings: null,
+    theme: null,
+  });
+  const sectionHasChanges = useRef<Record<PortfolioSection, boolean>>({
+    personalInfo: false,
+    skills: false,
+    projects: false,
+    experience: false,
+    education: false,
+    certifications: false,
+    settings: false,
+    theme: false,
+  });
+
+  // Track previous portfolio to avoid unnecessary updates
+  const previousPortfolioRef = useRef<string | null>(null);
+
+  // Helper to normalize portfolio for comparison (excludes internal IDs/timestamps)
+  const normalizeForComparison = (p: Portfolio) => {
+    return JSON.stringify({
+      personalInfo: p.personalInfo,
+      skills: p.skills,
+      projects: p.projects,
+      experience: p.experience,
+      education: p.education,
+      certifications: p.certifications,
+      settings: p.settings,
+      theme: p.theme,
+      primaryStack: p.primaryStack,
+    });
+  };
+
   // Load portfolio on mount
   useEffect(() => {
     if (!user) {
@@ -134,13 +186,14 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         if (fetchedPortfolio) {
           setPortfolio(fetchedPortfolio);
           // Set the ref to prevent autosave on initial load
-          previousPortfolioRef.current = JSON.stringify(fetchedPortfolio);
+          previousPortfolioRef.current =
+            normalizeForComparison(fetchedPortfolio);
           setState("success");
         } else {
           // No portfolio exists, start with empty
           const emptyPortfolio = createEmptyPortfolio();
           setPortfolio(emptyPortfolio);
-          previousPortfolioRef.current = JSON.stringify(emptyPortfolio);
+          previousPortfolioRef.current = normalizeForComparison(emptyPortfolio);
           setState("success");
         }
       } catch (err) {
@@ -151,7 +204,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         // Still allow editing with empty portfolio
         const emptyPortfolio = createEmptyPortfolio();
         setPortfolio(emptyPortfolio);
-        previousPortfolioRef.current = JSON.stringify(emptyPortfolio);
+        previousPortfolioRef.current = normalizeForComparison(emptyPortfolio);
         toast({
           variant: "destructive",
           title: "Failed to load portfolio",
@@ -163,15 +216,9 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     loadPortfolio();
   }, [user]);
 
-  // Debounce portfolio changes for autosave (2 seconds delay)
-  const debouncedPortfolio = useDebounce(portfolio, 5000);
-
-  // Track previous portfolio to avoid unnecessary updates
-  const previousPortfolioRef = useRef<string | null>(null);
-
-  // Autosave effect - saves as draft when portfolio changes
-  useEffect(() => {
-    if (!user || !debouncedPortfolio || !hasUnsavedChanges.current) {
+  // Per-section autosave function
+  const autosaveSection = async (section: PortfolioSection) => {
+    if (!user || !portfolio || !sectionHasChanges.current[section]) {
       return;
     }
 
@@ -180,119 +227,122 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       return;
     }
 
-    // Create a stable string representation to compare
-    const portfolioString = JSON.stringify(debouncedPortfolio);
-
-    // Skip if portfolio hasn't actually changed
-    if (previousPortfolioRef.current === portfolioString) {
-      return;
-    }
-
     // Prevent multiple autosaves from running simultaneously
     if (isAutosavingRef.current) {
       return;
     }
 
-    const performAutosave = async () => {
-      isAutosavingRef.current = true;
-      setAutosaveStatus("saving");
-      setSaveStatus("saving");
+    const portfolioString = normalizeForComparison(portfolio);
 
-      try {
-        // Create a draft version (isPublic = false)
-        const draftPortfolio: Portfolio = {
-          ...debouncedPortfolio,
-          settings: {
-            ...debouncedPortfolio.settings,
-            isPublic: false, // Always save as draft in autosave
-          },
-        };
+    // Skip if portfolio hasn't actually changed
+    if (previousPortfolioRef.current === portfolioString) {
+      sectionHasChanges.current[section] = false;
+      return;
+    }
 
-        // Validate locally first
-        const parsed = portfolioSchema.safeParse(draftPortfolio);
-        if (!parsed.success) {
-          // Don't autosave invalid data
-          setAutosaveStatus("error");
-          setSaveStatus("unsaved");
-          return;
-        }
+    isAutosavingRef.current = true;
+    setAutosaveStatus("saving");
+    setSaveStatus("saving");
 
-        const savedPortfolio = await createOrUpdatePortfolio(
-          user.id,
-          draftPortfolio
-        );
+    try {
+      // Create a draft version (isPublic = false)
+      const draftPortfolio: Portfolio = {
+        ...portfolio,
+        settings: {
+          ...portfolio.settings,
+          isPublic: false, // Always save as draft in autosave
+        },
+      };
 
-        // Only update portfolio state if the saved data is meaningfully different
-        // Compare only the data that matters (not internal IDs or timestamps)
-        const normalizeForComparison = (p: Portfolio) => {
-          return JSON.stringify({
-            personalInfo: p.personalInfo,
-            skills: p.skills,
-            projects: p.projects,
-            experience: p.experience,
-            education: p.education,
-            certifications: p.certifications,
-            settings: p.settings,
-            theme: p.theme,
-            primaryStack: p.primaryStack,
-          });
-        };
-
-        const currentNormalized = normalizeForComparison(debouncedPortfolio);
-        const savedNormalized = normalizeForComparison(savedPortfolio);
-
-        // Only update portfolio state if the saved data is meaningfully different
-        // This prevents unnecessary re-renders that cause duplicate inputs
-        if (savedNormalized !== currentNormalized) {
-          // Use functional update to check against current state before updating
-          setPortfolio((prev) => {
-            if (!prev) return savedPortfolio;
-
-            // Double-check that we're not setting the same data
-            const prevNormalized = normalizeForComparison(prev);
-            if (prevNormalized === savedNormalized) {
-              return prev; // Return same reference to prevent re-render
-            }
-
-            return savedPortfolio;
-          });
-          previousPortfolioRef.current = savedNormalized;
-        } else {
-          // Data is the same, just update the ref to prevent re-autosave
-          // Don't update portfolio state to avoid re-renders
-          previousPortfolioRef.current = portfolioString;
-        }
-
-        setLastSavedAt(new Date());
-        setAutosaveStatus("saved");
-        setSaveStatus("saved");
-        hasUnsavedChanges.current = false;
-
-        // Reset to idle after 3 seconds
-        if (autosaveTimeoutRef.current) {
-          clearTimeout(autosaveTimeoutRef.current);
-        }
-        autosaveTimeoutRef.current = setTimeout(() => {
-          setAutosaveStatus("idle");
-          setSaveStatus("idle");
-        }, 3000);
-      } catch (error) {
-        console.error("Autosave failed:", error);
+      // Validate locally first
+      const parsed = portfolioSchema.safeParse(draftPortfolio);
+      if (!parsed.success) {
+        // Don't autosave invalid data
         setAutosaveStatus("error");
         setSaveStatus("unsaved");
-        toast({
-          variant: "destructive",
-          title: "Autosave failed",
-          description:
-            "Your changes weren't saved automatically. Please save manually.",
-        });
-      } finally {
-        isAutosavingRef.current = false;
+        return;
       }
-    };
 
-    performAutosave();
-  }, [debouncedPortfolio, user, state, toast]);
+      const savedPortfolio = await createOrUpdatePortfolio(
+        user.id,
+        draftPortfolio
+      );
+
+      const currentNormalized = normalizeForComparison(portfolio);
+      const savedNormalized = normalizeForComparison(savedPortfolio);
+
+      // Only update portfolio state if the saved data is meaningfully different
+      if (savedNormalized !== currentNormalized) {
+        setPortfolio((prev) => {
+          if (!prev) return savedPortfolio;
+
+          const prevNormalized = normalizeForComparison(prev);
+          if (prevNormalized === savedNormalized) {
+            return prev; // Return same reference to prevent re-render
+          }
+
+          return savedPortfolio;
+        });
+        previousPortfolioRef.current = savedNormalized;
+      } else {
+        previousPortfolioRef.current = portfolioString;
+      }
+
+      // Mark this section as saved
+      sectionHasChanges.current[section] = false;
+
+      // Check if any section still has unsaved changes
+      const hasAnyUnsavedChanges = Object.values(
+        sectionHasChanges.current
+      ).some(Boolean);
+      hasUnsavedChanges.current = hasAnyUnsavedChanges;
+
+      setLastSavedAt(new Date());
+      setAutosaveStatus("saved");
+      setSaveStatus(hasAnyUnsavedChanges ? "unsaved" : "saved");
+
+      // Reset to idle after 3 seconds
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+      autosaveTimeoutRef.current = setTimeout(() => {
+        setAutosaveStatus("idle");
+        if (!hasAnyUnsavedChanges) {
+          setSaveStatus("idle");
+        }
+      }, 3000);
+    } catch (error) {
+      console.error(`Autosave failed for ${section}:`, error);
+      setAutosaveStatus("error");
+      setSaveStatus("unsaved");
+      toast({
+        variant: "destructive",
+        title: "Autosave failed",
+        description:
+          "Your changes weren't saved automatically. Please save manually.",
+      });
+    } finally {
+      isAutosavingRef.current = false;
+    }
+  };
+
+  // Helper to schedule autosave for a section after delay
+  const scheduleSectionAutosave = (section: PortfolioSection) => {
+    // Clear existing timeout for this section
+    if (sectionAutosaveTimeouts.current[section]) {
+      clearTimeout(sectionAutosaveTimeouts.current[section]!);
+    }
+
+    // Mark section as having changes
+    sectionHasChanges.current[section] = true;
+    hasUnsavedChanges.current = true;
+    setSaveStatus("unsaved");
+
+    // Schedule autosave after 3 seconds of inactivity
+    sectionAutosaveTimeouts.current[section] = setTimeout(() => {
+      autosaveSection(section);
+    }, 3000);
+  };
 
   const updatePersonalInfo = (value: PersonalInfo) => {
     if (!portfolio) return;
@@ -300,8 +350,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       personalInfo: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear personalInfo errors when user starts typing
     if (errors.personalInfo) {
       setErrors((prev) => ({
@@ -309,6 +357,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         personalInfo: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("personalInfo");
   };
 
   const updateSkills = (value: Skill[]) => {
@@ -317,8 +367,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       skills: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear skills errors when user adds a skill
     if (errors.skills) {
       setErrors((prev) => ({
@@ -326,6 +374,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         skills: undefined,
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("skills");
   };
 
   const updatePrimaryStack = (value: string[]) => {
@@ -334,8 +384,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       primaryStack: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
+    // Primary stack is part of skills section
+    scheduleSectionAutosave("skills");
   };
 
   const updateProjects = (value: Project[]) => {
@@ -344,8 +394,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       projects: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear projects errors when user modifies projects
     if (errors.projects && Object.keys(errors.projects).length > 0) {
       setErrors((prev) => ({
@@ -353,6 +401,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         projects: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("projects");
   };
 
   const updateExperience = (value: Experience[]) => {
@@ -361,8 +411,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       experience: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear experience errors when user modifies experience
     if (errors.experience && Object.keys(errors.experience).length > 0) {
       setErrors((prev) => ({
@@ -370,6 +418,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         experience: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("experience");
   };
 
   const updateEducation = (value: Education[]) => {
@@ -378,8 +428,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       education: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear education errors when user modifies education
     if (errors.education && Object.keys(errors.education).length > 0) {
       setErrors((prev) => ({
@@ -387,6 +435,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         education: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("education");
   };
 
   const updateCertifications = (value: Certification[]) => {
@@ -395,8 +445,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       certifications: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear certifications errors when user modifies certifications
     if (
       errors.certifications &&
@@ -407,6 +455,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         certifications: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("certifications");
   };
 
   const updateSettings = (value: PortfolioSettings) => {
@@ -415,8 +465,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       settings: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear settings errors when user modifies settings
     if (errors.settings && Object.keys(errors.settings).length > 0) {
       setErrors((prev) => ({
@@ -424,6 +472,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         settings: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("settings");
   };
 
   const updateTheme = (value: PortfolioTheme) => {
@@ -432,8 +482,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       ...prev!,
       theme: value,
     }));
-    hasUnsavedChanges.current = true;
-    setSaveStatus("unsaved");
     // Clear theme errors when user modifies theme
     if (errors.theme && Object.keys(errors.theme).length > 0) {
       setErrors((prev) => ({
@@ -441,6 +489,8 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         theme: {},
       }));
     }
+    // Schedule autosave for this section
+    scheduleSectionAutosave("theme");
   };
 
   const handleSave = async () => {
@@ -571,6 +621,18 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     }
   };
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(sectionAutosaveTimeouts.current).forEach((timeout) => {
+        if (timeout) clearTimeout(timeout);
+      });
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return {
     state,
     portfolio,
@@ -588,5 +650,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
     updateSettings,
     updateTheme,
     handleSave,
+    autosaveSection,
   };
 };

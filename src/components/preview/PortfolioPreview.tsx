@@ -23,7 +23,6 @@ export const PortfolioPreview = ({ portfolio }: PortfolioPreviewProps) => {
           <div className="text-xs text-slate-600 space-y-0.5 md:text-right">
             {personalInfo.email ? <p>{personalInfo.email}</p> : null}
             {personalInfo.phone ? <p>{personalInfo.phone}</p> : null}
-            {personalInfo.website ? <p>{personalInfo.website}</p> : null}
             {personalInfo.github ? <p>{personalInfo.github}</p> : null}
             {personalInfo.linkedin ? <p>{personalInfo.linkedin}</p> : null}
           </div>

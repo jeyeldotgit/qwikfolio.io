@@ -46,6 +46,14 @@
   --font-roboto: "Roboto", sans-serif;
 }
 
+/* Lightweight line clamp utility (Tailwind line-clamp plugin alternative) */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);

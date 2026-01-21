@@ -95,6 +95,7 @@ const AuthPage = () => {
               QwikFolio.io
             </span>
           </button>
+          <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button
             variant="outline"
@@ -103,6 +104,8 @@ const AuthPage = () => {
           >
             Back to landing
           </Button>
+          </div>
+       
         </div>
       </header>
 

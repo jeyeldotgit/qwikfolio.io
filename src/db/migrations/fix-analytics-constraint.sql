@@ -10,24 +10,10 @@ FROM pg_proc p
 JOIN pg_namespace n ON p.pronamespace = n.oid
 WHERE p.proname = 'log_new_experience';
 
--- Drop the problematic trigger
-DROP TRIGGER IF EXISTS tr_log_experience_added ON experience;
-
--- Drop the function (we'll recreate it if needed, or just remove it)
-DROP FUNCTION IF EXISTS log_new_experience();
-
--- If you want to keep the logging functionality, recreate it with a valid event_type
--- or remove the analytics insert entirely. For now, we'll just remove it.
--- If you need logging, you can create a separate log table or use a valid event_type.
-
--- Verify the trigger is gone
-SELECT 
-  trigger_name,
-  event_manipulation,
-  event_object_table
-FROM information_schema.triggers
-WHERE event_object_table = 'experience'
-  AND trigger_name = 'tr_log_experience_added';
+-- NOTE:
+-- Your trigger function inserts event_type = 'added_experience'.
+-- If you want to KEEP that behavior, the analytics constraint must allow it.
+-- This script updates the constraint accordingly (no need to drop the trigger/function).
 
 -- Also ensure the constraint is correct (in case it wasn't updated)
 DO $$
@@ -47,7 +33,16 @@ END $$;
 -- Recreate the constraint with all allowed event types
 ALTER TABLE portfolio_analytics 
 ADD CONSTRAINT portfolio_analytics_event_type_check 
-CHECK (event_type IN ('view', 'download', 'contact_click', 'social_click', 'project_view'));
+CHECK (
+  event_type IN (
+    'view',
+    'download',
+    'contact_click',
+    'social_click',
+    'project_view',
+    'added_experience'
+  )
+);
 
 -- Verify the constraint was created correctly
 SELECT 

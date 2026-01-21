@@ -424,25 +424,6 @@ export const PersonalInfoForm = ({
 
         <FormSection title="Links">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="website">Website (optional)</Label>
-              <Input
-                id="website"
-                type="url"
-                placeholder="https://your-site.com"
-                value={value.website ?? ""}
-                onChange={(event) =>
-                  handleFieldChange("website", event.target.value)
-                }
-                className={cn(errors.website && "border-red-500 focus:border-red-500 focus:ring-red-500")}
-              />
-              {errors.website && (
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {errors.website}
-                </p>
-              )}
-            </div>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>Social Links</Label>

@@ -124,7 +124,16 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const hasUnsavedChanges = useRef(false);
   const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isAutosavingRef = useRef(false);
+
+  // --- Shared save concurrency control (manual + autosave) ---
+  // Prevent overlapping saves which can corrupt data due to delete+insert patterns in persistence.
+  const isSavingRef = useRef(false);
+  type SaveKind = "autosave" | "manual";
+  const pendingSaveRef = useRef<null | { kind: SaveKind; section?: PortfolioSection }>(
+    null
+  );
+  // Keep an always-fresh snapshot to avoid saving stale closures.
+  const portfolioRef = useRef<Portfolio | null>(null);
 
   // Per-section autosave tracking
   const sectionAutosaveTimeouts = useRef<
@@ -153,6 +162,10 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
   // Track previous portfolio to avoid unnecessary updates
   const previousPortfolioRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    portfolioRef.current = portfolio;
+  }, [portfolio]);
+
   // Helper to normalize portfolio for comparison (excludes internal IDs/timestamps)
   const normalizeForComparison = (p: Portfolio) => {
     return JSON.stringify({
@@ -166,6 +179,53 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       theme: p.theme,
       primaryStack: p.primaryStack,
     });
+  };
+
+  const runExclusiveSave = async (
+    kind: SaveKind,
+    run: (p: Portfolio) => Promise<Portfolio>
+  ) => {
+    if (!user) return;
+
+    // If a save is already running, coalesce to a single "save latest" pass.
+    // Manual saves should override autosave if both happen.
+    if (isSavingRef.current) {
+      const existing = pendingSaveRef.current;
+      if (!existing || existing.kind === "autosave" || kind === "manual") {
+        pendingSaveRef.current = { kind };
+      }
+      return;
+    }
+
+    isSavingRef.current = true;
+
+    try {
+      // Always use the freshest portfolio at execution time.
+      const current = portfolioRef.current;
+      if (!current) return;
+      const savedPortfolio = await run(current);
+      return savedPortfolio;
+    } finally {
+      isSavingRef.current = false;
+
+      // Run one queued save (latest) if any.
+      const pending = pendingSaveRef.current;
+      pendingSaveRef.current = null;
+      if (pending) {
+        // Re-run using the appropriate mode. This call is intentionally fire-and-forget.
+        if (pending.kind === "manual") {
+          void handleSave();
+        } else {
+          // Best-effort autosave: pick the first section still marked dirty.
+          const dirtySection = (Object.entries(sectionHasChanges.current).find(
+            ([, dirty]) => dirty
+          )?.[0] as PortfolioSection | undefined);
+          if (dirtySection) {
+            void autosaveSection(dirtySection);
+          }
+        }
+      }
+    }
   };
 
   // Load portfolio on mount
@@ -227,11 +287,6 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       return;
     }
 
-    // Prevent multiple autosaves from running simultaneously
-    if (isAutosavingRef.current) {
-      return;
-    }
-
     const portfolioString = normalizeForComparison(portfolio);
 
     // Skip if portfolio hasn't actually changed
@@ -240,35 +295,32 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       return;
     }
 
-    isAutosavingRef.current = true;
-    setAutosaveStatus("saving");
-    setSaveStatus("saving");
-
     try {
-      // Create a draft version (isPublic = false)
-      const draftPortfolio: Portfolio = {
-        ...portfolio,
-        settings: {
-          ...portfolio.settings,
-          isPublic: false, // Always save as draft in autosave
-        },
-      };
+      setAutosaveStatus("saving");
+      setSaveStatus("saving");
 
-      // Validate locally first
-      const parsed = portfolioSchema.safeParse(draftPortfolio);
-      if (!parsed.success) {
-        // Don't autosave invalid data
-        setAutosaveStatus("error");
-        setSaveStatus("unsaved");
-        return;
-      }
+      const savedPortfolio = await runExclusiveSave("autosave", async (latest) => {
+        // Create a draft version (isPublic = false)
+        const draftPortfolio: Portfolio = {
+          ...latest,
+          settings: {
+            ...latest.settings,
+            isPublic: false, // Always save as draft in autosave
+          },
+        };
 
-      const savedPortfolio = await createOrUpdatePortfolio(
-        user.id,
-        draftPortfolio
-      );
+        // Validate locally first
+        const parsed = portfolioSchema.safeParse(draftPortfolio);
+        if (!parsed.success) {
+          throw new Error("Autosave skipped: draft portfolio is invalid");
+        }
 
-      const currentNormalized = normalizeForComparison(portfolio);
+        return await createOrUpdatePortfolio(user.id, draftPortfolio);
+      });
+
+      if (!savedPortfolio) return;
+
+      const currentNormalized = normalizeForComparison(portfolioRef.current ?? portfolio);
       const savedNormalized = normalizeForComparison(savedPortfolio);
 
       // Only update portfolio state if the saved data is meaningfully different
@@ -292,9 +344,7 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       sectionHasChanges.current[section] = false;
 
       // Check if any section still has unsaved changes
-      const hasAnyUnsavedChanges = Object.values(
-        sectionHasChanges.current
-      ).some(Boolean);
+      const hasAnyUnsavedChanges = Object.values(sectionHasChanges.current).some(Boolean);
       hasUnsavedChanges.current = hasAnyUnsavedChanges;
 
       setLastSavedAt(new Date());
@@ -312,17 +362,20 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
         }
       }, 3000);
     } catch (error) {
-      console.error(`Autosave failed for ${section}:`, error);
+      // If validation failed, treat as "unsaved" without spamming error toasts.
+      const message =
+        error instanceof Error ? error.message : "Unknown autosave error";
+      if (!message.toLowerCase().includes("invalid")) {
+        console.error(`Autosave failed for ${section}:`, error);
+        toast({
+          variant: "destructive",
+          title: "Autosave failed",
+          description:
+            "Your changes weren't saved automatically. Please save manually.",
+        });
+      }
       setAutosaveStatus("error");
       setSaveStatus("unsaved");
-      toast({
-        variant: "destructive",
-        title: "Autosave failed",
-        description:
-          "Your changes weren't saved automatically. Please save manually.",
-      });
-    } finally {
-      isAutosavingRef.current = false;
     }
   };
 
@@ -593,15 +646,24 @@ export const usePortfolioBuilder = (): UsePortfolioBuilderResult => {
       return;
     }
 
-    setState("loading");
-    setErrors({ message: null, fieldErrors: [] });
-
     try {
-      const savedPortfolio = await createOrUpdatePortfolio(user.id, portfolio);
+      setState("loading");
+      setErrors({ message: null, fieldErrors: [] });
+
+      const savedPortfolio = await runExclusiveSave("manual", async (latest) => {
+        return await createOrUpdatePortfolio(user.id, latest);
+      });
+
+      if (!savedPortfolio) return;
+
       setPortfolio(savedPortfolio);
       setState("success");
       setLastSavedAt(new Date());
       hasUnsavedChanges.current = false;
+      // Clear per-section flags since manual save is authoritative
+      (Object.keys(sectionHasChanges.current) as PortfolioSection[]).forEach((k) => {
+        sectionHasChanges.current[k] = false;
+      });
       setSaveStatus("saved");
       toast({
         variant: "success",
